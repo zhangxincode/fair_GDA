@@ -1,0 +1,23 @@
+/Users/zhangxin/PycharmProjects/FatraGNN-main/config/config.yaml
+Namespace(dataset='bail', inid='_B0', outid='', runs=1, start=50, epochs=400, dic_epochs=2, dtb_epochs=2, cla_epochs=15, clo_epochs=2, a_epochs=5, g_epochs=5, g_lr=0.05, g_wd=0, d_lr=0.001, d_wd=0, c_lr=0.005, c_wd=0, e_lr=0.005, e_wd=0, early_stopping=0, prop='scatter', predictfile='tmp', dropout=0.5, hidden=16, seed=1, encoder='GCN', K=10, top_k=10, clip_e=1, clip_c=1, f_mask='no', weight_clip='yes', ratio=1, alpha=1, ood=2, gpu=-1, close=0, discri=1, dropf=0, dropf_rate=0.1, disturb=1, align=1, modiStru=0, drope_rate=0.1, tune='True', times='config', labda=1, strlist=None, device=device(type='cpu'))
+整个模型已保存
+===========_B1============
+Acc:  0.7310469314079422
+auc_roc:  0.7050828464947623
+parity:  0.14514462809917356
+equality:  0.18139863433011538
+===========_B2============
+Acc:  0.8480801335559266
+auc_roc:  0.8658835794037869
+parity:  0.12267552182163188
+equality:  0.14981310249852448
+===========_B3============
+Acc:  0.765
+auc_roc:  0.8993666765559071
+parity:  0.18375791261386443
+equality:  0.11557432892764685
+===========_B4============
+Acc:  0.7772194304857621
+auc_roc:  0.8196683258968871
+parity:  0.10915052025227112
+equality:  0.13484646194926575
