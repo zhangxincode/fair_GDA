@@ -129,11 +129,22 @@ def run(data, args, data2):
     MLP_F = MLP_encoder(args).to(args.device)
     MLP_B = MLP_encoder(args).to(args.device)
     discriminator = MLP_discriminator(args).to(args.device)
-    optimizer_all = torch.optim.Adam([
+    classifier = torch.load('classifier_model.pth', weights_only=False).to(args.device)
+    encoder = torch.load('encoder_model.pth', weights_only=False).to(args.device)
+
+    optimizer_discriminate = torch.optim.Adam([
+        dict(params=encoder.lin.parameters(), weight_decay=args.e_wd),
+        dict(params=discriminator.lin.parameters(), weight_decay=args.d_wd),
+        dict(params=MLP_F.lin.parameters(), weight_decay=args.c_wd),
+        dict(params=MLP_B.lin.parameters(), weight_decay=args.c_wd)], lr=0.01)
+
+    optimizer_classify = torch.optim.Adam([
         dict(params=encoder.lin.parameters(), weight_decay=args.e_wd),
         dict(params=classifier.lin.parameters(), weight_decay=args.c_wd),
-        dict(params=discriminator.lin.parameters(), weight_decay=args.d_wd)], lr=0.01)
-    
+        dict(params=MLP_F.lin.parameters(), weight_decay=args.c_wd)], lr=0.01)
+
+    data1 = update_labels_by_neighbors_with_predictions(data, encoder, classifier)
+
     '==========train============='
     for count in range(args.runs):
         seed_everything(count + args.seed)
@@ -141,14 +152,15 @@ def run(data, args, data2):
         best_val_tradeoff = 0
         best_val_loss = math.inf
         encoder.train()
-        classifier.train()
+        classifier.eval()
         discriminator.train()
-        pbar = tqdm(range(200), unit='epoch')
-
-        for epoch in pbar:
-            pbar.set_description("epoch {}".format(epoch+1))
-            optimizer_all.zero_grad()
-            data1 = update_labels_by_neighbors_with_predictions(data, encoder, classifier)
+        MLP_B.train()
+        MLP_F.train()
+        '=====train_discriminator===='
+        pbar1 = tqdm(range(200), unit='epoch')
+        for epoch in pbar1:
+            pbar1.set_description("train_discriminator,epoch {}".format(epoch+1))
+            optimizer_discriminate.zero_grad()
 
             h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp)
             h1 = share_MLP(h)
@@ -160,30 +172,38 @@ def run(data, args, data2):
                                data1.x[:, args.sens_idx])
             loss_b = -criterion(output_B.view(-1),
                                data1.x[:, args.sens_idx])
-            output = classifier(h_F)
-            loss_c = F.binary_cross_entropy_with_logits(output[data1.train_mask],
-                                                            data.new_y[data.train_mask].unsqueeze(1)).to(
-                    args.device)
-            loss = loss_f + loss_b + loss_c
+            loss = 0.0000001*loss_f + 0.00000005*loss_b
 
             writer.add_scalar('loss_all', loss, global_step=epoch)
-            writer.add_scalar('loss_c', loss_c, global_step=epoch)
-            writer.add_scalar('loss_f', loss_f, global_step=epoch)
-            writer.add_scalar('loss_b', loss_b, global_step=epoch)
-
+            writer.add_scalar('loss_f1', loss_f, global_step=epoch)
+            writer.add_scalar('loss_b1', loss_b, global_step=epoch)
             loss.backward()
-            optimizer_all.step()
-            discriminator.eval()
+            optimizer_discriminate.step()
 
-            # train classifier and encoder
+        '=====train_classify===='
+        pbar2 = tqdm(range(150), unit='epoch')
+        for epoch in pbar2:
+            pbar2.set_description("epoch {}".format(epoch + 1))
+            optimizer_classify.zero_grad()
+            h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp)
+            h1 = share_MLP(h)
+            h_F = MLP_F(h1)
+            output = classifier(h_F)
+            loss_c = F.binary_cross_entropy_with_logits(output[data1.train_mask],
+                                                        data.new_y[data.train_mask].unsqueeze(1)).to(args.device)
+
+            writer.add_scalar('loss_c', loss_c, global_step=epoch)
+            loss_c.backward()
+            optimizer_classify.step()
 
 
-        best_val_tradeoff = 0
-        best_val_loss = math.inf
-
-        encoder.eval()
-        classifier.eval()
         "=====test======="
+        encoder.eval()
+        discriminator.eval()
+        classifier.eval()
+        MLP_F.eval()
+        MLP_B.eval()
+
         # 评价指标初始化
         if args.ood == 1:
             test_acc = [0 for n in range(len(args.strlist))]
@@ -204,7 +224,9 @@ def run(data, args, data2):
         if args.ood == 2:
             for i in range(len(data2)):
                 accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
-                    data2[i].x, classifier, encoder, data2[i], args)
+                    data2[i].x, classifier,MLP_F,encoder, data2[i], args)
+                # accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged3(
+                #      data2[i].x, classifier,discriminator,encoder, data2[i], args)
 
 
                 if auc_rocs['val'] + F1s['val'] + accs['val'] - args.alpha * (
@@ -266,7 +288,7 @@ if __name__ == '__main__':
     parser.add_argument('--outid', type=str, default='all')
     parser.add_argument('--runs', type=int, default=1) # 5
     parser.add_argument('--start', type=int, default=50)
-    parser.add_argument('--epochs', type=int, default=300)
+    parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--dic_epochs', type=int, default=2)
     parser.add_argument('--dtb_epochs', type=int, default=5)
     parser.add_argument('--cla_epochs', type=int, default=10)
@@ -288,7 +310,7 @@ if __name__ == '__main__':
     parser.add_argument('--predictfile', type=str, default='tmp')
     parser.add_argument('--dropout', type=float, default=0.5)
     parser.add_argument('--hidden', type=int, default=16)
-    parser.add_argument('--seed', type=int, default=1)
+    parser.add_argument('--seed', type=int, default=1)#1
     parser.add_argument('--encoder', type=str, default='GCN')
     parser.add_argument('--K', type=int, default=10)
     parser.add_argument('--top_k', type=int, default=10)

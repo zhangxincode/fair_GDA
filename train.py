@@ -158,8 +158,8 @@ def run(data, args, data2):
 
             if args.ood == 2:
                 for i in range(len(data2)):
-                    accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
-                        data2[i].x, classifier, encoder, data2[i], args)
+                    accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged3(
+                        data2[i].x, classifier, discriminator,encoder, data2[i], args)
 
 
                     if auc_rocs['val'] + F1s['val'] + accs['val'] - args.alpha * (
@@ -178,8 +178,8 @@ def run(data, args, data2):
                     datatmp, _, _, _, _, _ = get_dataset(args.dataset, args.outid + args.strlist[i], args.top_k)
                     datatmp = datatmp.to(args.device)
                     datatmp.test_mask = datatmp.test_mask | datatmp.val_mask | datatmp.test_mask
-                    accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
-                        datatmp.x, classifier, encoder, datatmp, args)
+                    accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged3(
+                        datatmp.x, classifier, discriminator,encoder, datatmp, args)
 
 
 
@@ -226,7 +226,7 @@ if __name__ == '__main__':
     parser.add_argument('--outid', type=str, default='all')
     parser.add_argument('--runs', type=int, default=1) # 5
     parser.add_argument('--start', type=int, default=50)
-    parser.add_argument('--epochs', type=int, default=300)
+    parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--dic_epochs', type=int, default=2)
     parser.add_argument('--dtb_epochs', type=int, default=5)
     parser.add_argument('--cla_epochs', type=int, default=10)
@@ -405,4 +405,13 @@ if __name__ == '__main__':
         print('auc_roc: ', np.mean(auc_roc.T[i]))
         print('parity: ', np.mean(parity.T[i]))
         print('equality: ', np.mean(equality.T[i]))
+
+
+'''
+===========_B1============
+Acc:  0.6272563176895307
+auc_roc:  0.7047072253558959
+parity:  0.1408931977113796
+equality:  0.13637862020249591
+'''
 

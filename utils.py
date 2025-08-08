@@ -379,7 +379,6 @@ def read_config(args):
     print(yamlPath)
     with open(yamlPath, 'r', encoding='utf-8') as f:
         cont = f.read()
-        # TODO
         config_dict = yaml.safe_load(cont)['g'][args.dataset]
 
     if args.gpu == -1:
