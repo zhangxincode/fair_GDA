@@ -8,7 +8,7 @@ def train(model, data, optimizer, args):
     model.train()
     optimizer.zero_grad()
 
-    output, h = model(data.x, data.edge_index)
+    output, h = model(data.x, data.edge_index,data.edge_weight)
     preds = (output.squeeze() > 0).type_as(data.y)
 
     loss = {}
@@ -35,7 +35,7 @@ def evaluate_ged4(x, classifier, MLP_F,encoder, data, args):
             for k in range(args.K):
                 x = data.x[:, 0]
 
-                h1 = encoder(x, data.edge_index, data.adj_norm_sp)
+                h1 = encoder(x, data.edge_index, data.adj_norm_sp,data.edge_weight)
                 h_F = MLP_F(h1)
                 output = classifier(h_F)
                 # output2 = discriminator()
@@ -49,7 +49,7 @@ def evaluate_ged4(x, classifier, MLP_F,encoder, data, args):
 
             output = torch.stack(outputs).mean(dim=0)
         else:
-            h1 = encoder(data.x, data.edge_index, data.adj_norm_sp)
+            h1 = encoder(data.x, data.edge_index, data.adj_norm_sp,data.edge_weight)
             h_F = MLP_F(h1)
             output = classifier(h_F)
             # output2 = discriminator(h)
@@ -95,7 +95,7 @@ def evaluate_ged3(x, classifier, discriminator, encoder, data, args):
             for k in range(args.K):
                 x = data.x
 
-                h = encoder(x, data.edge_index, data.adj_norm_sp)
+                h = encoder(x, data.edge_index, data.adj_norm_sp,data.edge_weight)
                 output = classifier(h)
 
 
@@ -112,7 +112,7 @@ def evaluate_ged3(x, classifier, discriminator, encoder, data, args):
 
             output = torch.stack(outputs).mean(dim=0)
         else:
-            h = encoder(data.x, data.edge_index, data.adj_norm_sp)
+            h = encoder(data.x, data.edge_index, data.adj_norm_sp,data.edge_weight)
             output = classifier(h)
             # output2 = discriminator(h)
 

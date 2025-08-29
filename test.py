@@ -1,3 +1,5 @@
+import torch
+
 from dataset import *
 from model import *
 from utils import *
@@ -10,10 +12,121 @@ warnings.filterwarnings('ignore')
 import math
 from pandas import DataFrame
 from utils import read_config
+from torch.utils.tensorboard import SummaryWriter       # 引入包
+
+# 创建一个tensorboard网页，并将文件放在文件地址中
+writer = SummaryWriter('./log/bord1')
+
+# 创建折线图，标题是唯一标识！
+
+# def update_labels_by_neighbors_with_predictions(data, encoder, classifier):
+#     """
+#     首先为所有节点生成预测标签。
+#     然后，将每个节点的标签修改为其邻居节点的【预测标签】中出现最多的类别。
+#     """
+#     # --- 1. 一次性为所有节点生成预测标签（优化后） ---
+#     # 将模型设置为评估模式
+#     encoder.eval()
+#     classifier.eval()
+#     with torch.no_grad():  # 在推理时不需要计算梯度
+#         # GNN模型一次性处理所有节点，效率更高
+#         h = encoder(data.x, data.edge_index, data.adj_norm_sp)  # 假设encoder不需要 adj_norm_sp
+#         output = classifier(h)
+#         # 获取每个节点的预测类别 (取概率最大的那个)
+#         predict_labels = torch.softmax(output, dim=1)#######
+#
+#     num_nodes = data.x.shape[0]
+#     new_labels = data.y.clone()  # 初始化new_labels，可以基于原始标签或全零
+#     edge_index = data.edge_index
+#
+#     # --- 2. 遍历每个节点，根据邻居的【预测标签】更新标签 ---
+#     for node_idx in range(num_nodes):
+#         # 找到当前节点的所有邻居 (修正后的逻辑)
+#         # 查找所有源节点是当前节点的边，其对应的目标节点就是邻居
+#         mask_source = edge_index[0] == node_idx
+#         neighbors_from_source = edge_index[1][mask_source]
+#
+#         # 查找所有目标节点是当前节点的边，其对应的源节点也是邻居 (适用于无向图)
+#         mask_target = edge_index[1] == node_idx
+#         neighbors_from_target = edge_index[0][mask_target]
+#
+#         # 合并所有邻居并去重
+#         all_neighbors = torch.unique(torch.cat([neighbors_from_source, neighbors_from_target]))
+#
+#         # 如果节点有邻居
+#         if len(all_neighbors) > 0:
+#             # --- 3. 核心修改：使用邻居的`predict_labels`而不是`data.y` ---
+#             neighbor_predicted_labels = predict_labels[all_neighbors]
+#
+#             # 统计每个预测标签的出现次数
+#             unique_labels, counts = torch.unique(neighbor_predicted_labels, return_counts=True)
+#
+#             # 找到出现次数最多的预测标签
+#             if len(counts) > 0:
+#                 most_common_label_idx = torch.argmax(counts)
+#                 most_common_label = unique_labels[most_common_label_idx]
+#
+#                 # 更新当前节点的标签
+#                 new_labels[node_idx] = most_common_label
+#         # else: 如果节点没有邻居，则其标签保持不变
+#
+#     # 在data对象中创建一个新的属性来存储更新后的标签
+#     data.new_y = new_labels
+#
+#     return data
+
+def update_labels_by_neighbors_with_predictions(data, encoder, classifier):
+    """
+    首先为所有节点生成预测标签。
+    然后，利用矩阵运算通过邻接矩阵和预测标签来更新每个节点的标签。
+    """
+    encoder.eval()
+    classifier.eval()
+    with torch.no_grad():  # 在推理时不需要计算梯度
+        h = encoder(data.x, data.edge_index, data.adj_norm_sp)  # 假设encoder不需要 adj_norm_sp
+        output = classifier(h)
+        predict_labels = torch.softmax(output, dim=1)  # 获取每个节点对各类别的预测概率
+
+    num_nodes = data.x.shape[0]
+    edge_index = data.edge_index
+
+    # 构建邻接矩阵
+    adj_t = SparseTensor(row=edge_index[0], col=edge_index[1], sparse_sizes=(num_nodes, num_nodes))
+    adj_t = adj_t.set_diag()  # 实际是添加自环，使节点自身参与聚合
+
+    # 计算度数并进行标准化
+    deg = adj_t.sum(dim=1).to(torch.float)  # 节点度数 节点的邻居数量
+    deg_inv_sqrt = deg.pow(-0.5)  # 度数的倒数平方根  用度数的倒数平方根来对邻接矩阵进行标准化
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0  # 防止除零
+    adj_t = deg_inv_sqrt.view(-1, 1) * adj_t * deg_inv_sqrt.view(1, -1)  # 标准化邻接矩阵
+
+    # 计算邻居标签的加权平均
+    neighbor_probs = torch.matmul(adj_t.to_dense(), predict_labels)  # 邻接矩阵与预测标签相乘
+
+    # 对加权平均的结果进行归一化
+    normalized_probs = neighbor_probs / neighbor_probs.sum(dim=1, keepdim=True)  # 归一化
+
+    # 选择最大概率标签
+    new_labels = torch.argmax(normalized_probs, dim=1)
+
+    # 存储并返回结果
+    data.new_y = new_labels
+
+    return data
+
 
 def run(data, args, data2):
-    pbar = tqdm(range(args.runs), unit='run')
+    #pbar = tqdm(range(args.runs), unit='run')
     # criterion = nn.BCELoss()
+    seed = 3
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
     criterion = nn.MSELoss()
     if args.ood == 2:
         acc, f1, auc_roc, parity, equality = np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs, len(data2)])
@@ -38,10 +151,6 @@ def run(data, args, data2):
 
 
 
-    classifier = torch.load('classifier_model.pth', weights_only=False).to(args.device)
-    encoder = torch.load('encoder_model.pth',weights_only=False).to(args.device)
-
-
     t_idx_s0 = data.sens[data.train_mask] == 0
     t_idx_s1 = data.sens[data.train_mask] == 1
     t_idx_s0_y1 = torch.logical_and(t_idx_s0, data.y[data.train_mask] == 1)
@@ -63,70 +172,16 @@ def run(data, args, data2):
     adj = torch.sparse_coo_tensor(data.edge_index, eweight, [data.x.shape[0], data.x.shape[0]])
     A2 = torch.spmm(adj, adj)
 
-    share_MLP = MLP_encoder(args,args.hidden).to(args.device)
-    MLP_F = MLP_encoder(args,args.hidden).to(args.device)
-    MLP_B = MLP_encoder(args, args.hidden).to(args.device)
+
     discriminator = MLP_discriminator(args).to(args.device)
-    optimizer_all = torch.optim.Adam([
-        dict(params=encoder.lin.parameters(), weight_decay=args.e_wd),
-        dict(params=classifier.lin.parameters(), weight_decay=args.c_wd),
-        dict(params=discriminator.lin.parameters(), weight_decay=args.d_wd),
-        dict(params=share_MLP.lin.parameters(), weight_decay=args.e_wd),
-        dict(params=MLP_F.lin.parameters(), weight_decay=args.e_wd),
-        dict(params=MLP_B.lin.parameters(), weight_decay=args.e_wd),
-        ], lr=0.01)
-
-    for count in pbar:
-        seed_everything(count + args.seed)
-
-        best_val_tradeoff = 0
-        best_val_loss = math.inf
-        encoder.train()
-        classifier.train()
-        discriminator.train()
-
-        for epoch in range(0, 200):
-            optimizer_all.zero_grad()
-
-            h = encoder(data.x, data.edge_index, data.adj_norm_sp)
-            # print(h.size())
-            h1 = share_MLP(h)
-            h_F = MLP_F(h1)
-            h_B = MLP_B(h1)
-            output_F = discriminator(h_F)
-            output_B = discriminator(h_B)
-            loss_f = criterion(output_F.view(-1),
-                               data.x[:, args.sens_idx])
-            loss_b = -criterion(output_B.view(-1),
-                               data.x[:, args.sens_idx])
-            output = classifier(h_F)
-            if args.discri == 1:
-                loss_c = F.binary_cross_entropy_with_logits(output[data.train_mask],
-                                                            data.y[data.train_mask].unsqueeze(1)).to(
-                    args.device)  # - (1-args.labda) * criterion(output2.view(-1), data.x[:, args.sens_idx])
-            else:
-                loss_c = F.binary_cross_entropy_with_logits(output[data.train_mask],
-                                                            data.y[data.train_mask].unsqueeze(1)).to(args.device)
-            loss = loss_f + loss_b + loss_c
-
-            loss.backward()
-            optimizer_all.step()
-            discriminator.eval()
-
-            # train classifier and encoder
-
-
-        best_val_tradeoff = 0
-        best_val_loss = math.inf
-
-        encoder.eval()
-        classifier.eval()
-        share_MLP.eval()
-        MLP_F.eval()
-        MLP_B.eval()
-        discriminator.eval()
-
+    classifier = torch.load('./model_para/classifier_best_0.pth', weights_only=False).to(args.device)
+    encoder = torch.load('./model_para/encoder_best_0.pth', weights_only=False).to(args.device)
+    for count in range(args.runs):
         "=====test======="
+        encoder.eval()
+        discriminator.eval()
+        classifier.eval()
+
         # 评价指标初始化
         if args.ood == 1:
             test_acc = [0 for n in range(len(args.strlist))]
@@ -146,9 +201,8 @@ def run(data, args, data2):
 
         if args.ood == 2:
             for i in range(len(data2)):
-                accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
-                    data2[i].x, classifier, encoder, data2[i], args)
-
+                accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged3(
+                    data2[i].x, classifier,discriminator,encoder, data2[i], args)
 
                 if auc_rocs['val'] + F1s['val'] + accs['val'] - args.alpha * (
                         tmp_parity['val'] + tmp_equality['val']) > best_val_tradeoff[i]:
@@ -164,7 +218,7 @@ def run(data, args, data2):
                 datatmp, _, _, _, _, _ = get_dataset(args.dataset, args.outid + args.strlist[i], args.top_k)
                 datatmp = datatmp.to(args.device)
                 datatmp.test_mask = datatmp.test_mask | datatmp.val_mask | datatmp.test_mask
-                accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
+                accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged3(
                     datatmp.x, classifier, encoder, datatmp, args)
 
 
@@ -190,12 +244,13 @@ def run(data, args, data2):
                                     accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
 
 
-    for i in range(len(args.strlist)):
-        acc[count][i] = test_acc[i]
-        f1[count][i] = test_f1[i]
-        auc_roc[count][i] = test_auc_roc[i]
-        parity[count][i] = test_parity[i]
-        equality[count][i] = test_equality[i]
+        for i in range(len(args.strlist)):
+            acc[count][i] = test_acc[i]
+            f1[count][i] = test_f1[i]
+            auc_roc[count][i] = test_auc_roc[i]
+            parity[count][i] = test_parity[i]
+            equality[count][i] = test_equality[i]
+
 
 
 
@@ -204,11 +259,11 @@ def run(data, args, data2):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, default='bail')#german
-    parser.add_argument('--inid', type=str, default='_B1')
+    parser.add_argument('--inid', type=str, default='_B2')
     parser.add_argument('--outid', type=str, default='all')
     parser.add_argument('--runs', type=int, default=1) # 5
     parser.add_argument('--start', type=int, default=50)
-    parser.add_argument('--epochs', type=int, default=300)
+    parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--dic_epochs', type=int, default=2)
     parser.add_argument('--dtb_epochs', type=int, default=5)
     parser.add_argument('--cla_epochs', type=int, default=10)
@@ -230,7 +285,7 @@ if __name__ == '__main__':
     parser.add_argument('--predictfile', type=str, default='tmp')
     parser.add_argument('--dropout', type=float, default=0.5)
     parser.add_argument('--hidden', type=int, default=16)
-    parser.add_argument('--seed', type=int, default=1)
+    parser.add_argument('--seed', type=int, default=1)#1
     parser.add_argument('--encoder', type=str, default='GCN')
     parser.add_argument('--K', type=int, default=10)
     parser.add_argument('--top_k', type=int, default=10)
@@ -257,6 +312,7 @@ if __name__ == '__main__':
 
 
     args = parser.parse_args()
+    # seed_everything(args.seed)
     args.strlist = None
     if args.tune == 'True':
         args = read_config(args)
@@ -337,6 +393,7 @@ if __name__ == '__main__':
         args.agg_hom = [0 for i in range(len(args.strlist))]
 
     elif args.ood == 2:
+        # 设置 test set类别
         data2 = []
         if args.dataset == "credit":
 
@@ -346,7 +403,7 @@ if __name__ == '__main__':
                     args.dataset,  args.strlist[i], args.top_k)
                 data2.append(datatmp)
         elif args.dataset == "bail":
-            args.strlist = ['_B2', '_B3', '_B4',]
+            args.strlist = ['_B1', '_B2', '_B3', '_B4']
             for i in range(len(args.strlist)):
                 datatmp, _, _, _, _, _ = get_dataset(
                     args.dataset,  args.strlist[i], args.top_k)
@@ -388,4 +445,5 @@ if __name__ == '__main__':
         print('auc_roc: ', np.mean(auc_roc.T[i]))
         print('parity: ', np.mean(parity.T[i]))
         print('equality: ', np.mean(equality.T[i]))
+        print('F1: ', np.mean(f1.T[i]))
 

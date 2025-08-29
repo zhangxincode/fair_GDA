@@ -1,3 +1,11 @@
+import torch
+import torch.optim as optim
+import torch.nn as nn
+import torch.nn.functional as F
+
+import torch.sparse
+
+
 from dataset import *
 from model import *
 from utils import *
@@ -11,72 +19,108 @@ import math
 from pandas import DataFrame
 from utils import read_config
 from torch.utils.tensorboard import SummaryWriter       # 引入包
+import copy
+writer = SummaryWriter('./runs/1')
+import ipdb
+from data_edit import DE_X,DE_A,train_data_edit,train_data_aug,DataAug
 
-# 创建一个tensorboard网页，并将文件放在文件地址中
-writer = SummaryWriter('./log/bord1')
 
-# 创建折线图，标题是唯一标识！
+def eval_tool(pre,y):
+    acc = ((pre == y).sum() / y.shape[0])  # 伪标签准确率
+    acc_1 = ((pre == 1).int() * (y == 1).int()).sum() / (y == 1).int().sum()  # 伪标签为1的准确率
+    acc_0 = ((pre == 0).int() * (y == 0).int()).sum() / (y == 0).int().sum()  # 伪标签为0的准确率
+    TP = ((pre == 1).int() * (y == 1).int()).sum()
+    TN = ((pre == 0).int() * (y == 0).int()).sum()
+    FP = ((pre == 1).int() * (y == 0).int()).sum()
+    FN = ((pre == 0).int() * (y == 1).int()).sum()
+    F1 = 2*TP/(2*TP+FP+FN) # 针对数据不平衡问题
+    parity, equality = fair_metric(pre.cpu().numpy(), y.cpu().numpy(), data.sens.cpu().numpy())
+    result = {
+        'acc': acc,
+        'acc_1': acc_1,
+        'acc_0': acc_0,
+        'F1': F1,
+        'TP': TP,
+        'TN': TN,
+        'FP': FP,
+        'FN': FN,
+        'parity': parity,
+        'equality': equality
+    }
+    return result
 
-def update_labels_by_neighbors_with_predictions(data, encoder, classifier):
+
+import torch
+from torch_sparse import SparseTensor
+
+@torch.no_grad()
+def update_labels_by_neighbors_with_predictions(
+    data, encoder, classifier,
+    alpha: float = 0.25,   # 传播强度（越小越稳，0.05~0.2 常用）
+    K: int = 3,           # 迭代步数（2~10，过大易过平滑）
+    add_self_loop: bool = True
+):
     """
-    首先为所有节点生成预测标签。
-    然后，将每个节点的标签修改为其邻居节点的【预测标签】中出现最多的类别。
+    1) 用 encoder+classifier 生成初始预测 P0（概率分布）；
+    2) 用对称归一化稀疏邻接 A_sym = D^{-1/2}(A+I)D^{-1/2} 做 K 次传播：
+           P <- (1 - alpha) * P0 + alpha * (A_sym @ P)
+       每步保持行为概率分布并数值安全；
+    3) 输出 new_y = argmax(P)。
     """
-    # --- 1. 一次性为所有节点生成预测标签（优化后） ---
-    # 将模型设置为评估模式
-    encoder.eval()
-    classifier.eval()
-    with torch.no_grad():  # 在推理时不需要计算梯度
-        # GNN模型一次性处理所有节点，效率更高
-        h = encoder(data.x, data.edge_index, data.adj_norm_sp)  # 假设encoder不需要 adj_norm_sp
-        output = classifier(h)
-        # 获取每个节点的预测类别 (取概率最大的那个)
-        predict_labels = torch.argmax(output, dim=1)
+    eps = 1e-12
 
-    num_nodes = data.x.shape[0]
-    new_labels = data.y.clone()  # 初始化new_labels，可以基于原始标签或全零
-    edge_index = data.edge_index
+    # ---------- 1) 初始预测 ----------
+    encoder.eval(); classifier.eval()
+    h = encoder(data.x, data.edge_index, getattr(data, "adj_norm_sp", None),data.edge_weight)
+    logits = classifier(h)
 
-    # --- 2. 遍历每个节点，根据邻居的【预测标签】更新标签 ---
-    for node_idx in range(num_nodes):
-        # 找到当前节点的所有邻居 (修正后的逻辑)
-        # 查找所有源节点是当前节点的边，其对应的目标节点就是邻居
-        mask_source = edge_index[0] == node_idx
-        neighbors_from_source = edge_index[1][mask_source]
+    # 支持二分类/多分类：
+    if logits.dim() == 1 or logits.size(-1) == 1:
+        # 二分类：sigmoid -> (1-p, p)
+        p = torch.sigmoid(logits.view(-1)).clamp(0.0 + 1e-6, 1.0 - 1e-6)
+        P0 = torch.stack([1 - p, p], dim=1)  # (N, 2)
+    else:
+        # 多分类：softmax
+        P0 = torch.softmax(logits, dim=1)
 
-        # 查找所有目标节点是当前节点的边，其对应的源节点也是邻居 (适用于无向图)
-        mask_target = edge_index[1] == node_idx
-        neighbors_from_target = edge_index[0][mask_target]
+    P = P0.clone()
 
-        # 合并所有邻居并去重
-        all_neighbors = torch.unique(torch.cat([neighbors_from_source, neighbors_from_target]))
+    # ---------- 2) 构建对称归一化稀疏邻接 A_sym ----------
+    num_nodes = data.x.size(0)
+    row, col = data.edge_index  # shape: (2, E)
 
-        # 如果节点有邻居
-        if len(all_neighbors) > 0:
-            # --- 3. 核心修改：使用邻居的`predict_labels`而不是`data.y` ---
-            neighbor_predicted_labels = predict_labels[all_neighbors]
+    A = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+    if add_self_loop:
+        A = A.set_diag()
 
-            # 统计每个预测标签的出现次数
-            unique_labels, counts = torch.unique(neighbor_predicted_labels, return_counts=True)
+    deg = A.sum(dim=1).to(torch.float)          # 度 D (N,)
+    deg = deg.clamp_min(eps)
+    d_is = deg.pow(-0.5)                        # D^{-1/2}
+    A_sym = A.mul(d_is.view(-1, 1)).mul(d_is.view(1, -1))  # D^{-1/2} A D^{-1/2}
 
-            # 找到出现次数最多的预测标签
-            if len(counts) > 0:
-                most_common_label_idx = torch.argmax(counts)
-                most_common_label = unique_labels[most_common_label_idx]
+    # ---------- 3) 稳定传播 ----------
+    for _ in range(K):
+        neighbor = A_sym.matmul(P)                       # 稀疏×稠密
+        P = (1 - alpha) * P0 + alpha * neighbor
+        P = P / P.sum(dim=1, keepdim=True).clamp_min(eps)  # 保持为概率分布
 
-                # 更新当前节点的标签
-                new_labels[node_idx] = most_common_label
-        # else: 如果节点没有邻居，则其标签保持不变
-
-    # 在data对象中创建一个新的属性来存储更新后的标签
+    # ---------- 4) 输出 ----------
+    new_labels = P.argmax(dim=1)
     data.new_y = new_labels
-
+    data.new_probs = P      # 若后续要用概率，可顺带存下
+    # import ipdb; ipdb.set_trace()
+    eval_tool(torch.argmax(P0, dim=1), data.y)  # 直接预测的伪标签准确率
+    eval_tool(data.new_y, data.y)  # 传播后的伪标签准确率
+    # import ipdb; ipdb.set_trace()
     return data
 
+
+
+
 def run(data, args, data2):
-    #pbar = tqdm(range(args.runs), unit='run')
-    # criterion = nn.BCELoss()
-    criterion = nn.MSELoss()
+    criterion = nn.BCELoss()
+
+    seed_everything(args.seed)
     if args.ood == 2:
         acc, f1, auc_roc, parity, equality = np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs, len(data2)])
     elif args.ood == 1:
@@ -96,12 +140,6 @@ def run(data, args, data2):
         data2 = data2.to(args.device)
     else:
         data2 = data2
-
-
-
-
-    classifier = torch.load('classifier_model.pth', weights_only=False).to(args.device)
-    encoder = torch.load('encoder_model.pth',weights_only=False).to(args.device)
 
 
     t_idx_s0 = data.sens[data.train_mask] == 0
@@ -125,157 +163,240 @@ def run(data, args, data2):
     adj = torch.sparse_coo_tensor(data.edge_index, eweight, [data.x.shape[0], data.x.shape[0]])
     A2 = torch.spmm(adj, adj)
 
-    share_MLP = MLP_encoder(args).to(args.device)
     MLP_F = MLP_encoder(args).to(args.device)
+    optimizer_F = torch.optim.Adam(params=MLP_F.parameters(), lr=0.01)
+
     MLP_B = MLP_encoder(args).to(args.device)
-    discriminator = MLP_discriminator(args).to(args.device)
-    classifier = torch.load('classifier_model.pth', weights_only=False).to(args.device)
-    encoder = torch.load('encoder_model.pth', weights_only=False).to(args.device)
+    optimizer_B = torch.optim.Adam(params=MLP_B.parameters(), lr=0.01)
 
-    optimizer_discriminate = torch.optim.Adam([
-        dict(params=encoder.lin.parameters(), weight_decay=args.e_wd),
-        dict(params=discriminator.lin.parameters(), weight_decay=args.d_wd),
-        dict(params=MLP_F.lin.parameters(), weight_decay=args.c_wd),
-        dict(params=MLP_B.lin.parameters(), weight_decay=args.c_wd)], lr=0.01)
+    discriminator_F = MLP_discriminator(args).to(args.device)
+    optimizer_D_F = torch.optim.Adam(params=discriminator_F.parameters(), lr=0.01)
 
-    optimizer_classify = torch.optim.Adam([
-        dict(params=encoder.lin.parameters(), weight_decay=args.e_wd),
-        dict(params=classifier.lin.parameters(), weight_decay=args.c_wd),
-        dict(params=MLP_F.lin.parameters(), weight_decay=args.c_wd)], lr=0.01)
+    discriminator_B = MLP_discriminator(args).to(args.device)
+    optimizer_D_B = torch.optim.Adam(params=discriminator_B.parameters(), lr=0.01)
 
-    data1 = update_labels_by_neighbors_with_predictions(data, encoder, classifier)
+    classifier = torch.load('./model_para/classifier_best_0.pth', weights_only=False).to(args.device)
+    optimizer_C = torch.optim.Adam(params=classifier.parameters(), lr=0.01)
+
+    encoder = torch.load('./model_para/encoder_best_0.pth', weights_only=False).to(args.device)
+    optimizer_E = torch.optim.Adam(params=encoder.parameters(), lr=0.01)
+
+
+
+    data3 = data.clone()
+    data_aug = DataAug(classifier, encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1])
+    de_a = DE_A(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1])
+    de_x = DE_X(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1])
+
 
     '==========train============='
     for count in range(args.runs):
-        seed_everything(count + args.seed)
+        data1 = update_labels_by_neighbors_with_predictions(data3, encoder, classifier)
+        pbar = tqdm(range(20), unit='epoch')# 20
+        for epoch in pbar:
+            ''' 训练判别器F'''
+            encoder.eval()
+            MLP_F.train()
+            discriminator_F.train()
+            for i in range(10):
+                optimizer_F.zero_grad()
+                optimizer_D_F.zero_grad()
+                with torch.no_grad():
+                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
+                h_F = MLP_F(h)
+                pred_B = torch.sigmoid(discriminator_F(h_F))
 
-        best_val_tradeoff = 0
-        best_val_loss = math.inf
-        encoder.train()
-        classifier.eval()
-        discriminator.train()
-        MLP_B.train()
-        MLP_F.train()
-        '=====train_discriminator===='
-        pbar1 = tqdm(range(200), unit='epoch')
-        for epoch in pbar1:
-            pbar1.set_description("train_discriminator,epoch {}".format(epoch+1))
-            optimizer_discriminate.zero_grad()
-
-            h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp)
-            h1 = share_MLP(h)
-            h_F = MLP_F(h1)
-            h_B = MLP_B(h1)
-            output_F = discriminator(h_F)
-            output_B = discriminator(h_B)
-            loss_f = criterion(output_F.view(-1),
-                               data1.x[:, args.sens_idx])
-            loss_b = -criterion(output_B.view(-1),
-                               data1.x[:, args.sens_idx])
-            loss = 0.0000001*loss_f + 0.00000005*loss_b
-
-            writer.add_scalar('loss_all', loss, global_step=epoch)
-            writer.add_scalar('loss_f1', loss_f, global_step=epoch)
-            writer.add_scalar('loss_b1', loss_b, global_step=epoch)
-            loss.backward()
-            optimizer_discriminate.step()
-
-        '=====train_classify===='
-        pbar2 = tqdm(range(150), unit='epoch')
-        for epoch in pbar2:
-            pbar2.set_description("epoch {}".format(epoch + 1))
-            optimizer_classify.zero_grad()
-            h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp)
-            h1 = share_MLP(h)
-            h_F = MLP_F(h1)
-            output = classifier(h_F)
-            loss_c = F.binary_cross_entropy_with_logits(output[data1.train_mask],
-                                                        data.new_y[data.train_mask].unsqueeze(1)).to(args.device)
-
-            writer.add_scalar('loss_c', loss_c, global_step=epoch)
-            loss_c.backward()
-            optimizer_classify.step()
+                # 判别器的损失是两个分支损失之和
+                # import ipdb; ipdb.set_trace()
+                loss_D = criterion(pred_B.view(-1), data1.x[:, args.sens_idx])
+                # loss_D = nn.MSELoss(pred_B.view(-1), data1.x[:, args.sens_idx])
+                #writer.add_scalar('lossD', loss_D, global_step=epoch*10+i)
+                loss_D.backward()
+                optimizer_D_F.step()
+                optimizer_F.step()
 
 
-        "=====test======="
-        encoder.eval()
-        discriminator.eval()
-        classifier.eval()
-        MLP_F.eval()
-        MLP_B.eval()
-
-        # 评价指标初始化
-        if args.ood == 1:
-            test_acc = [0 for n in range(len(args.strlist))]
-            best_val_tradeoff = [0 for n in range(len(args.strlist))]
-            test_auc_roc = [0 for n in range(len(args.strlist))]
-            test_f1 = [0 for n in range(len(args.strlist))]
-            test_parity = [0 for n in range(len(args.strlist))]
-            test_equality = [0 for n in range(len(args.strlist))]
-        elif args.ood == 2:
-            test_acc = [0 for n in range(len(data2))]
-            best_val_tradeoff = [0 for n in range(len(data2))]
-            test_auc_roc = [0 for n in range(len(data2))]
-            test_f1 = [0 for n in range(len(data2))]
-            test_parity = [0 for n in range(len(data2))]
-            test_equality = [0 for n in range(len(data2))]
+            '''   训练分类器'''
+            encoder.eval()
+            MLP_F.train()
+            classifier.train()
 
 
-        if args.ood == 2:
-            for i in range(len(data2)):
-                accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
-                    data2[i].x, classifier,MLP_F,encoder, data2[i], args)
-                # accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged3(
-                #      data2[i].x, classifier,discriminator,encoder, data2[i], args)
+            for i in range(50):
+                optimizer_F.zero_grad()
+                optimizer_C.zero_grad()
+                with torch.no_grad():
+                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
+                h_F = MLP_F(h)
+                output_class = torch.sigmoid(classifier(h_F))
+                # import ipdb; ipdb.set_trace()
+                loss_c = criterion(output_class, data1.new_probs[:,1].unsqueeze(1).float())
+                #writer.add_scalar('lossc', loss_c, global_step=epoch * 50 + i)
+                loss_c.backward()
+                optimizer_C.step()
+                optimizer_F.step()
 
 
-                if auc_rocs['val'] + F1s['val'] + accs['val'] - args.alpha * (
-                        tmp_parity['val'] + tmp_equality['val']) > best_val_tradeoff[i]:
+
+            ''' 对抗训练MLP_F '''
+            discriminator_F.eval()
+            classifier.eval()
+            encoder.eval()
+            MLP_F.train()
+
+
+            for i in range(20):
+                optimizer_F.zero_grad()
+                with torch.no_grad():
+                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
+                h_F = MLP_F(h)
+                pred_F_adv = discriminator_F(h_F)
+                # import ipdb; ipdb.set_trace()
+                loss_adv_F = criterion(pred_F_adv.view(-1),0.5 * torch.ones_like(pred_F_adv.view(-1)))
+                #writer.add_scalar('lossadv', loss_adv_F, global_step=epoch * 30 + i)
+                loss_adv_F.backward()
+                optimizer_F.step()
+
+
+            '''训练判别器B'''
+            encoder.eval()
+            MLP_B.train()
+            discriminator_B.train()
+            for i in range(50):
+                optimizer_B.zero_grad()
+                optimizer_D_B.zero_grad()
+                with torch.no_grad():
+                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
+                h_B = MLP_B(h)
+                pred_B_adv = torch.sigmoid(discriminator_B(h_B))
+                loss_adv_B = criterion(pred_B_adv.view(-1), data1.x[:, args.sens_idx])
+                #writer.add_scalar('lossb', loss_adv_B, global_step=epoch * 50 + i)
+                loss_adv_B.backward()
+                optimizer_B.step()
+                optimizer_D_B.step()
+
+
+            '''  异类疏远 '''
+            encoder.train()
+            MLP_F.eval()
+            MLP_B.eval()
+            classifier.train()
+
+
+            for i in range(10):
+                optimizer_C.zero_grad()
+                optimizer_F.zero_grad()
+                optimizer_B.zero_grad()
+                optimizer_E.zero_grad()
+                h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
+                h_F = MLP_F(h)
+                h_B = MLP_B(h)
+                logits = torch.sigmoid(classifier(h_F))
+                task_loss = criterion(logits, data1.new_probs[:,1].unsqueeze(1).float())
+
+                # 分离损失
+                hF = F.normalize(h_F, dim=1)
+                hB = F.normalize(h_B, dim=1)
+                cos_sim = (hF * hB).sum(dim=1)
+                loss_ortho = (cos_sim ** 2).mean()
+                #writer.add_scalar('losssmi', loss_ortho, global_step=epoch * 10 + i)
+                #writer.add_scalar('losssmi_C', task_loss, global_step=epoch * 10 + i)
+                loss = 0.9*task_loss + 0.1 * loss_ortho
+                #writer.add_scalar('lossall', loss, global_step=epoch * 50 + i)
+
+
+                loss.backward()
+                optimizer_C.step()
+                optimizer_F.step()
+                optimizer_B.step()
+                optimizer_E.step()
+
+
+
+
+
+
+            "=====test======="
+            encoder.eval()
+            discriminator_F.eval()
+            classifier.eval()
+            MLP_F.eval()
+            MLP_B.eval()
+
+            # 评价指标初始化
+            if args.ood == 1:
+                test_acc = [0 for n in range(len(args.strlist))]
+                best_val_tradeoff = [0 for n in range(len(args.strlist))]
+                test_auc_roc = [0 for n in range(len(args.strlist))]
+                test_f1 = [0 for n in range(len(args.strlist))]
+                test_parity = [0 for n in range(len(args.strlist))]
+                test_equality = [0 for n in range(len(args.strlist))]
+            elif args.ood == 2:
+                test_acc = [0 for n in range(len(data2))]
+                best_val_tradeoff = [0 for n in range(len(data2))]
+                test_auc_roc = [0 for n in range(len(data2))]
+                test_f1 = [0 for n in range(len(data2))]
+                test_parity = [0 for n in range(len(data2))]
+                test_equality = [0 for n in range(len(data2))]
+
+
+            if args.ood == 2:
+                for i in range(len(data2)):
+                    accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
+                        data2[i].x, classifier,MLP_F,encoder, data2[i], args)
+                    pbar.set_postfix({'acc': accs['test'], 'auc': auc_rocs['test'], 'f1': F1s['test'],'parity':tmp_parity['test'],'equality':tmp_equality['test']})
+
+
+                    if auc_rocs['val'] + F1s['val'] + accs['val'] - args.alpha * (
+                            tmp_parity['val'] + tmp_equality['val']) > best_val_tradeoff[i]:
+                        test_acc[i] = accs['test']
+                        test_auc_roc[i] = auc_rocs['test']
+                        test_f1[i] = F1s['test']
+                        test_parity[i], test_equality[i] = tmp_parity['test'], tmp_equality['test']
+
+                        best_val_tradeoff[i] = auc_rocs['val'] + F1s['val'] + \
+                                            accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
+            elif args.ood == 1:
+                for i in range(len(args.strlist)):
+                    datatmp, _, _, _, _, _ = get_dataset(args.dataset, args.outid + args.strlist[i], args.top_k)
+                    datatmp = datatmp.to(args.device)
+                    datatmp.test_mask = datatmp.test_mask | datatmp.val_mask | datatmp.test_mask
+                    accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
+                        datatmp.x, classifier, encoder, datatmp, args)
+
+
+
                     test_acc[i] = accs['test']
                     test_auc_roc[i] = auc_rocs['test']
                     test_f1[i] = F1s['test']
                     test_parity[i], test_equality[i] = tmp_parity['test'], tmp_equality['test']
 
-                    best_val_tradeoff[i] = auc_rocs['val'] + F1s['val'] + \
-                                        accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
-        elif args.ood == 1:
-            for i in range(len(args.strlist)):
-                datatmp, _, _, _, _, _ = get_dataset(args.dataset, args.outid + args.strlist[i], args.top_k)
-                datatmp = datatmp.to(args.device)
-                datatmp.test_mask = datatmp.test_mask | datatmp.val_mask | datatmp.test_mask
+
+
+            else:
                 accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
-                    datatmp.x, classifier, encoder, datatmp, args)
+                    data.x, classifier, encoder, data, args)
+                if auc_rocs['val'] + F1s['val'] + accs['val'] - args.alpha * (
+                        tmp_parity['val'] + tmp_equality['val']) > best_val_tradeoff:
+                    test_acc = accs['test']
+                    test_auc_roc = auc_rocs['test']
+                    test_f1 = F1s['test']
+                    test_parity, test_equality = tmp_parity['test'], tmp_equality['test']
+
+                    best_val_tradeoff = auc_rocs['val'] + F1s['val'] + \
+                                        accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
+
+            # 数据编辑训练
+            data3 = train_data_aug(data1,data_aug,args) # xa合并训练
+            # data3 = train_data_edit(data1,de_a,de_x,args)  # xa单独训练
 
 
-
-                test_acc[i] = accs['test']
-                test_auc_roc[i] = auc_rocs['test']
-                test_f1[i] = F1s['test']
-                test_parity[i], test_equality[i] = tmp_parity['test'], tmp_equality['test']
-
-
-
-        else:
-            accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
-                data.x, classifier, encoder, data, args)
-            if auc_rocs['val'] + F1s['val'] + accs['val'] - args.alpha * (
-                    tmp_parity['val'] + tmp_equality['val']) > best_val_tradeoff:
-                test_acc = accs['test']
-                test_auc_roc = auc_rocs['test']
-                test_f1 = F1s['test']
-                test_parity, test_equality = tmp_parity['test'], tmp_equality['test']
-
-                best_val_tradeoff = auc_rocs['val'] + F1s['val'] + \
-                                    accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
-
-
-    for i in range(len(args.strlist)):
-        acc[count][i] = test_acc[i]
-        f1[count][i] = test_f1[i]
-        auc_roc[count][i] = test_auc_roc[i]
-        parity[count][i] = test_parity[i]
-        equality[count][i] = test_equality[i]
-
+        for i in range(len(args.strlist)):
+            acc[count][i] = test_acc[i]
+            f1[count][i] = test_f1[i]
+            auc_roc[count][i] = test_auc_roc[i]
+            parity[count][i] = test_parity[i]
+            equality[count][i] = test_equality[i]
 
 
 
@@ -284,7 +405,7 @@ def run(data, args, data2):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, default='bail')#german
-    parser.add_argument('--inid', type=str, default='_B1')
+    parser.add_argument('--inid', type=str, default='_B4')
     parser.add_argument('--outid', type=str, default='all')
     parser.add_argument('--runs', type=int, default=1) # 5
     parser.add_argument('--start', type=int, default=50)
@@ -337,6 +458,7 @@ if __name__ == '__main__':
 
 
     args = parser.parse_args()
+    # seed_everything(args.seed)
     args.strlist = None
     if args.tune == 'True':
         args = read_config(args)
@@ -469,4 +591,7 @@ if __name__ == '__main__':
         print('auc_roc: ', np.mean(auc_roc.T[i]))
         print('parity: ', np.mean(parity.T[i]))
         print('equality: ', np.mean(equality.T[i]))
+        print('f1: ', np.mean(f1.T[i]))
+
+
 

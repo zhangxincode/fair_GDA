@@ -65,8 +65,12 @@ class MLP_encoder(torch.nn.Module):
             nn.ReLU(),
             nn.Linear(32, args.hidden)
         )
+
     def reset_parameters(self):
-        self.lin.reset_parameters()
+        for layer in self.lin:
+            if isinstance(layer, nn.Linear):
+                layer.reset_parameters()
+
 
     def clip_parameters(self, channel_weights):
         for i in range(self.lin.weight.data.shape[1]):
@@ -107,11 +111,33 @@ class GCN_encoder_scatter(torch.nn.Module):
         self.lin.reset_parameters()
         self.bias.data.fill_(0.0)
 
-    def forward(self, x, edge_index, adj_norm_sp):
-        h = self.lin(x)
-        h = propagate2(h, edge_index) + self.bias
+    def propagate(self, x, edge_index, edge_weight=None):
+        """ feature propagation procedure: sparsematrix
+        """
+        edge_index, _ = add_remaining_self_loops(
+            edge_index, num_nodes=x.size(0))
 
-        return h
+        # calculate the degree normalize term
+        row, col = edge_index
+        deg = degree(col, x.size(0), dtype=x.dtype)
+        deg_inv_sqrt = deg.pow(-0.5)
+        # for the first order appro of laplacian matrix in GCN, we use deg_inv_sqrt[row]*deg_inv_sqrt[col]
+        if edge_weight is None:
+            edge_weight = deg_inv_sqrt[row] * deg_inv_sqrt[col]  # 如果没有原始权重，就直接用归一化
+        else:
+            edge_weight = deg_inv_sqrt[row] * deg_inv_sqrt[col] + edge_weight  # 如果有原始权重，再加上归一化系数
+        # normalize the features on the starting point of the edge
+        out = edge_weight.view(-1, 1) * x[row]
+
+        return scatter(out, edge_index[-1], dim=0, dim_size=x.size(0), reduce='add')
+
+    def forward(self, x, edge_index, adj_norm_sp,edge_weight=None):
+        h = self.lin(x)
+        if edge_weight is not None:
+            h1 = self.propagate(h, edge_index, edge_weight) + self.bias
+        else:
+            h1 = self.propagate(h, edge_index)+ self.bias
+        return h1
 
 
 class GCN_2(nn.Module):
@@ -174,7 +200,7 @@ class GCN_encoder_spmm(torch.nn.Module):
         self.bias.data.fill_(0.0)
 
     def forward(self, x, edge_index, adj_norm_sp):
-        h = self.lin(x)
+        h = 1#self.lin(x)
         h = torch.spmm(adj_norm_sp, h) + self.bias
         # h = propagate2(h, edge_index) + self.bias
 
@@ -262,7 +288,7 @@ class MLP_classifier(torch.nn.Module):
         super(MLP_classifier, self).__init__()
         self.args = args
 
-        self.lin = Linear(args.hidden, args.num_classes)
+        self.lin = Linear(args.hidden, 1)#args.num_classes+1)
 
     def clip_parameters(self):
         for p in self.lin.parameters():
@@ -272,9 +298,10 @@ class MLP_classifier(torch.nn.Module):
         self.lin.reset_parameters()
 
     def forward(self, h, edge_index=None):
-        h = self.lin(h)
+        # import ipdb; ipdb.set_trace()
+        h1 = self.lin(h)
 
-        return h
+        return h1
 
 class Graph_Editer(nn.Module):
     def __init__(self, n, a, device):

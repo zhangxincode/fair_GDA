@@ -420,7 +420,7 @@ def get_dataset(dataname, inid, top_k):
     if(dataname == 'credit' ):
         sens_idx = 1
     elif(dataname == 'bail'):
-        sens_idx = 0
+        sens_idx = 1
     elif (dataname == 'pokec'):
         sens_idx = 3
 
@@ -436,6 +436,6 @@ def get_dataset(dataname, inid, top_k):
     corr_idx = np.argsort(-np.abs(corr_matrix))
     if(top_k > 0):
         corr_idx = corr_idx[:top_k]
-
-    return Data(x=features, edge_index=edge_index, adj_norm_sp=adj_norm_sp, y=labels.float(), train_mask=train_mask, val_mask=val_mask, test_mask=test_mask, sens=sens), sens_idx, corr_matrix, corr_idx, x_min, x_max
+    edge_weight = torch.zeros_like(torch.ones(edge_index.shape[1]), dtype=torch.float)
+    return Data(x=features, edge_index=edge_index, adj_norm_sp=adj_norm_sp, y=labels.float(), train_mask=train_mask, val_mask=val_mask, test_mask=test_mask, sens=sens,edge_weight=edge_weight), sens_idx, corr_matrix, corr_idx, x_min, x_max
 

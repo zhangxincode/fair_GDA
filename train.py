@@ -1,20 +1,24 @@
-from dataset import *
-from model import *
-from utils import *
-from learn import *
+from dataset import get_dataset
+from model import MLP_encoder, MLP_classifier, MLP_discriminator,GIN_encoder,GCN_encoder_spmm,GCN_encoder_scatter,SAGE_encoder
+from utils import seed_everything,np
+from learn import evaluate_ged4,evaluate_ged3
+import torch
+import torch.nn.functional as F
 import argparse
 from tqdm import tqdm
 import warnings
-
+import torch.nn as nn
 warnings.filterwarnings('ignore')
 import math
 from pandas import DataFrame
 from utils import read_config
 
+seed_everything(1)
+
+
 def run(data, args, data2):
-    pbar = tqdm(range(args.runs), unit='run')
-    # criterion = nn.BCELoss()
-    criterion = nn.MSELoss()
+    # pbar = tqdm(range(args.runs), unit='run')
+    criterion = nn.BCELoss()
     if args.ood == 2:
         acc, f1, auc_roc, parity, equality = np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs, len(data2)])
     elif args.ood == 1:
@@ -86,60 +90,67 @@ def run(data, args, data2):
     adj = torch.sparse_coo_tensor(data.edge_index, eweight, [data.x.shape[0], data.x.shape[0]])
     A2 = torch.spmm(adj, adj)
 
-    for count in pbar:
-        seed_everything(count + args.seed)
+    for count in range(args.runs):
         discriminator.reset_parameters()
         classifier.reset_parameters()
         encoder.reset_parameters()
 
         best_val_tradeoff = 0
         best_val_loss = math.inf
+        pbar1 = tqdm(range(args.epochs), unit='epoch')
+        for epoch in pbar1:
+            pbar1.set_description(f'epoch {epoch}')
 
-        for epoch in range(0, args.epochs):
-            # print(f"======={epoch}=======")
+            '训练鉴别器与encorder'
+            discriminator.train()
+            encoder.train()
+            for epoch_d in range(0, args.dic_epochs):
+                optimizer_d.zero_grad()
+                optimizer_e.zero_grad()
+                h = encoder(data.x, data.edge_index, data.adj_norm_sp)
+                output = discriminator(h)
+                loss_d = criterion(output[data.train_mask].view(-1),
+                                   data.x[data.train_mask][:, args.sens_idx])
 
-            # train discriminator to recognize the sensitive group / make group close
-            if args.discri == 1:
-                discriminator.train()
-                for epoch_d in range(0, args.dic_epochs):
-                    optimizer_d.zero_grad()
+                loss_d.backward()
+                optimizer_d.step()
+                optimizer_e.step()
 
-                    h = encoder(data.x, data.edge_index, data.adj_norm_sp)
-                    output = discriminator(h)
-                    loss_d = criterion(output.view(-1),
-                                       data.x[:, args.sens_idx])
-
-                    loss_d.backward()
-                    optimizer_d.step()
-                discriminator.eval()
-
-            # train classifier and encoder
+            'train classifier and encoder'
             classifier.train()
             encoder.train()
             for epoch_c in range(0, args.cla_epochs):
                 # print("classify")
                 optimizer_c.zero_grad()
                 optimizer_e.zero_grad()
-
                 h = encoder(data.x, data.edge_index, data.adj_norm_sp)
                 output = classifier(h)
-
-
-                if args.discri == 1:
-                    loss_c = F.binary_cross_entropy_with_logits(output[data.train_mask], data.y[data.train_mask].unsqueeze(1)).to(args.device) # - (1-args.labda) * criterion(output2.view(-1), data.x[:, args.sens_idx])
-                else:
-                    loss_c = F.binary_cross_entropy_with_logits(output[data.train_mask], data.y[data.train_mask].unsqueeze(1)).to(args.device)
-
+                loss_c = F.binary_cross_entropy_with_logits(output[data.train_mask],
+                                                            data.y[data.train_mask].unsqueeze(1)).to(args.device)
                 loss_c.backward()
-
                 optimizer_e.step()
                 optimizer_c.step()
 
-            encoder.eval()
-            classifier.eval()
 
+            '对抗训练encorder'
+            discriminator.eval()
+            encoder.train()
+            optimizer_e.zero_grad()
+            for epoch_g in range(0, args.g_epochs):
+                optimizer_e.zero_grad()
+                h = encoder(data.x, data.edge_index, data.adj_norm_sp)
+                output = discriminator(h)
+
+                loss_g = F.mse_loss(output[data.train_mask].view(-1),
+                                    0.5 * torch.ones_like(output[data.train_mask].view(-1)))
+
+                loss_g.backward()
+                optimizer_e.step()
 
             "=====test======="
+            encoder.eval()
+            classifier.eval()
+            discriminator.train()
             if args.ood == 1:
                 test_acc = [0 for n in range(len(args.strlist))]
                 best_val_tradeoff = [0 for n in range(len(args.strlist))]
@@ -171,6 +182,8 @@ def run(data, args, data2):
 
                         best_val_tradeoff[i] = auc_rocs['val'] + F1s['val'] + \
                                             accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
+                        # torch.save(encoder, './model_para/encoder_best_{}.pth'.format(count))
+                        # torch.save(classifier, './model_para/classifier_best_{}.pth'.format(count))
             elif args.ood == 1:
                 if epoch != (args.epochs - 1):
                     continue
@@ -181,39 +194,34 @@ def run(data, args, data2):
                     accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged3(
                         datatmp.x, classifier, discriminator,encoder, datatmp, args)
 
-
-
                     test_acc[i] = accs['test']
                     test_auc_roc[i] = auc_rocs['test']
                     test_f1[i] = F1s['test']
                     test_parity[i], test_equality[i] = tmp_parity['test'], tmp_equality['test']
+                    torch.save(encoder, './model_para/encoder_best_{}.pth'.format(count))
+                    torch.save(classifier, './model_para/classifier_best_{}.pth'.format(count))
 
 
 
             else:
                 accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
                     data.x, classifier, discriminator, encoder, data, args)
-                if auc_rocs['val'] + F1s['val'] + accs['val'] - args.alpha * (
-                        tmp_parity['val'] + tmp_equality['val']) > best_val_tradeoff:
+                if auc_rocs['val'] + F1s['val'] + accs['val'] - args.alpha * (tmp_parity['val'] + tmp_equality['val']) > best_val_tradeoff:
+
                     test_acc = accs['test']
                     test_auc_roc = auc_rocs['test']
                     test_f1 = F1s['test']
                     test_parity, test_equality = tmp_parity['test'], tmp_equality['test']
-
-                    best_val_tradeoff = auc_rocs['val'] + F1s['val'] + \
-                                        accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
-
-
+                    best_val_tradeoff[i] = auc_rocs['val'] + F1s['val'] + \
+                                           accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
+                    torch.save(encoder, './model_para/encoder_best_{}.pth'.format(count))
+                    torch.save(classifier, './model_para/classifier_best_{}.pth'.format(count))
         for i in range(len(args.strlist)):
             acc[count][i] = test_acc[i]
             f1[count][i] = test_f1[i]
             auc_roc[count][i] = test_auc_roc[i]
             parity[count][i] = test_parity[i]
             equality[count][i] = test_equality[i]
-        # 直接保存最后一次训练的整个模型对象
-        torch.save(encoder, './encoder_model.pth')
-        torch.save(classifier, './classifier_model.pth')
-        print(f"整个模型已保存")
 
 
 
@@ -364,7 +372,7 @@ if __name__ == '__main__':
                     args.dataset,  args.strlist[i], args.top_k)
                 data2.append(datatmp)
         elif args.dataset == "bail":
-            args.strlist = ['_B1',  '_B2', '_B3', '_B4',]
+            args.strlist = ['_B0','_B1','_B2','_B3','_B4']
             for i in range(len(args.strlist)):
                 datatmp, _, _, _, _, _ = get_dataset(
                     args.dataset,  args.strlist[i], args.top_k)
@@ -405,6 +413,7 @@ if __name__ == '__main__':
         print('auc_roc: ', np.mean(auc_roc.T[i]))
         print('parity: ', np.mean(parity.T[i]))
         print('equality: ', np.mean(equality.T[i]))
+        print('F1: ', np.mean(f1.T[i]))
 
 
 '''
