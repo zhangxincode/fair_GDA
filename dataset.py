@@ -437,5 +437,5 @@ def get_dataset(dataname, inid, top_k):
     if(top_k > 0):
         corr_idx = corr_idx[:top_k]
     edge_weight = torch.zeros_like(torch.ones(edge_index.shape[1]), dtype=torch.float)
-    return Data(x=features, edge_index=edge_index, adj_norm_sp=adj_norm_sp, y=labels.float(), train_mask=train_mask, val_mask=val_mask, test_mask=test_mask, sens=sens,edge_weight=edge_weight), sens_idx, corr_matrix, corr_idx, x_min, x_max
+    return Data(x=features, edge_index=edge_index, adj_norm_sp=adj_norm_sp, y=labels.float(), train_mask=train_mask, val_mask=val_mask, test_mask=test_mask, sens=sens,edge_weight=edge_weight,sen_idx=sens_idx), sens_idx, corr_matrix, corr_idx, x_min, x_max
 

@@ -1,4 +1,11 @@
-import torch
+'''
+本代码是本网络不进行data edit学习的网络，
+对于标签平滑，使用的是标签平滑正则化，即对标签进行平滑处理，使标签分布更加均匀，避免模型过拟合。
+对于模型调整，使用的是解纠缠表示学习，即通过解纠缠表示学习，使模型的表示能力更强，从而提高模型的性能。
+
+'''
+
+
 
 from dataset import *
 from model import *
@@ -13,8 +20,7 @@ warnings.filterwarnings('ignore')
 from utils import read_config
 from torch.utils.tensorboard import SummaryWriter       # 引入包
 from data_edit import DE_X,DE_A,train_data_edit,train_data_aug,DataAug
-# 创建一个tensorboard网页，并将文件放在文件地址中
-#writer = SummaryWriter('./runs/1')
+
 def eval_tool(pre,y):
     acc = ((pre == y).sum() / y.shape[0])  # 伪标签准确率
     acc_1 = ((pre == 1).int() * (y == 1).int()).sum() / (y == 1).int().sum()  # 伪标签为1的准确率
@@ -64,7 +70,7 @@ def update_labels_by_neighbors_with_predictions(
 
     # ---------- 1) 初始预测 ----------
     encoder.eval(); classifier.eval()
-    h = encoder(data.x, data.edge_index, getattr(data, "adj_norm_sp", None))
+    h = encoder(data.x, data.edge_index, getattr(data, "adj_norm_sp", None),data.edge_weight)
     logits = classifier(h)
 
     # 支持二分类/多分类：
@@ -175,9 +181,9 @@ def run(data, args, data2):
 
 
 
-    data1 = update_labels_by_neighbors_with_predictions(data, encoder, classifier)
 
-    data3 = data1.clone()
+
+    data3 = data.clone()
     data_aug = DataAug(classifier, encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1])
     de_a = DE_A(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1])
     de_x = DE_X(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1])
@@ -186,6 +192,7 @@ def run(data, args, data2):
 
 
     for count in range(args.runs):
+        data1 = update_labels_by_neighbors_with_predictions(data3, encoder, classifier)
         pbar = tqdm(range(20), unit='epoch')
         for epoch in pbar:
             ''' 训练判别器F'''
@@ -196,13 +203,13 @@ def run(data, args, data2):
                 optimizer_F.zero_grad()
                 optimizer_D_F.zero_grad()
                 with torch.no_grad():
-                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp)
+                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
                 h_F = MLP_F(h)
                 pred_B = torch.sigmoid(discriminator_F(h_F))
 
                 # 判别器的损失是两个分支损失之和
+                # import ipdb; ipdb.set_trace()
                 loss_D = criterion(pred_B.view(-1), data1.x[:, args.sens_idx])
-                #writer.add_scalar('lossD', loss_D, global_step=epoch*10+i)
                 loss_D.backward()
                 optimizer_D_F.step()
                 optimizer_F.step()
@@ -218,12 +225,10 @@ def run(data, args, data2):
                 optimizer_F.zero_grad()
                 optimizer_C.zero_grad()
                 with torch.no_grad():
-                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp)
+                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
                 h_F = MLP_F(h)
                 output_class = torch.sigmoid(classifier(h_F))
-                # import ipdb; ipdb.set_trace()
                 loss_c = criterion(output_class, data1.new_probs[:,1].unsqueeze(1).float())
-                #writer.add_scalar('lossc', loss_c, global_step=epoch * 50 + i)
                 loss_c.backward()
                 optimizer_C.step()
                 optimizer_F.step()
@@ -240,12 +245,10 @@ def run(data, args, data2):
             for i in range(20):
                 optimizer_F.zero_grad()
                 with torch.no_grad():
-                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp)
+                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp, data1.edge_weight)
                 h_F = MLP_F(h)
                 pred_F_adv = discriminator_F(h_F)
-                # import ipdb; ipdb.set_trace()
                 loss_adv_F = criterion(pred_F_adv.view(-1),0.5 * torch.ones_like(pred_F_adv.view(-1)))
-                #writer.add_scalar('lossadv', loss_adv_F, global_step=epoch * 30 + i)
                 loss_adv_F.backward()
                 optimizer_F.step()
 
@@ -258,11 +261,11 @@ def run(data, args, data2):
                 optimizer_B.zero_grad()
                 optimizer_D_B.zero_grad()
                 with torch.no_grad():
-                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp)
+                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp, data1.edge_weight)
                 h_B = MLP_B(h)
                 pred_B_adv = torch.sigmoid(discriminator_B(h_B))
                 loss_adv_B = criterion(pred_B_adv.view(-1), data1.x[:, args.sens_idx])
-                #writer.add_scalar('lossb', loss_adv_B, global_step=epoch * 50 + i)
+
                 loss_adv_B.backward()
                 optimizer_B.step()
                 optimizer_D_B.step()
@@ -280,7 +283,7 @@ def run(data, args, data2):
                 optimizer_F.zero_grad()
                 optimizer_B.zero_grad()
                 optimizer_E.zero_grad()
-                h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp)
+                h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp, data1.edge_weight)
                 h_F = MLP_F(h)
                 h_B = MLP_B(h)
                 logits = torch.sigmoid(classifier(h_F))
@@ -378,8 +381,6 @@ def run(data, args, data2):
                     best_val_tradeoff = auc_rocs['val'] + F1s['val'] + \
                                         accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
 
-            # data1 = train_data_aug(data1, data_aug, args)  # xa合并训练
-            data1 = train_data_edit(data1,de_a,de_x,args)  # xa单独训练
         for i in range(len(args.strlist)):
             acc[count][i] = test_acc[i]
             f1[count][i] = test_f1[i]
@@ -449,7 +450,6 @@ if __name__ == '__main__':
 
 
     args = parser.parse_args()
-    # seed_everything(args.seed)
     args.strlist = None
     if args.tune == 'True':
         args = read_config(args)

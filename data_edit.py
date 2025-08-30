@@ -48,10 +48,10 @@ class DataAug(nn.Module):
 
 
         h0 = h.clone()
-        h0[:, args.sens_idx] = 0
+        h0[:, h0.sen_idx] = 0
 
         h1 = h.clone()
-        h1[:, args.sens_idx] = 1
+        h1[:, h1.sen_idx] = 1
 
 
         batch_size = h1.shape[0]
@@ -84,7 +84,7 @@ def train_data_aug(data,data_aug,args):
 
     optimizer = optim.Adam([data_aug.delta_X,data_aug.delta_A], lr=0.5)
     # pbar1 =  tqdm(range(100))
-    for epoch in range(100):#pbar1:
+    for epoch in range(args.de_together_epochs):#pbar1:
         # pbar1.set_description("epoch {}".format(epoch))
         optimizer.zero_grad()
         loss,_,_= data_aug(data33,args)
@@ -94,11 +94,8 @@ def train_data_aug(data,data_aug,args):
     with torch.no_grad():
         loss,delta_X,delta_A= data_aug(data33,args)
         data33.x = data33.x + delta_X
-
-        # import ipdb; ipdb.set_trace()
         #对敏感属性不进行训练
         data33.x[:, 1] = data33.sens
-        # data33.edge_index = (data33.edge_index + delta_A).type_as(data33.edge_index)
         data33.edge_weight = delta_A
     return data33
 
@@ -137,10 +134,10 @@ class DE_X(nn.Module):
         # h = self.encoder(x1, edge_index,adj_norm_sp)
 
         h0 = h.clone()
-        h0[:, args.sens_idx] = 0
+        h0[:, data.sen_idx] = 0
 
         h1 = h.clone()
-        h1[:, args.sens_idx] = 1
+        h1[:, data.sen_idx] = 1
         batch_size = h1.shape[0]
         z1 = F.normalize(h0)
         z2 = F.normalize(h1)
@@ -188,10 +185,10 @@ class DE_A(nn.Module):
         h = self.encoder(x1, data.edge_index, data.adj_norm_sp, edge_weight=self.delta_A)
 
         h0 = h.clone()
-        h0[:, args.sens_idx] = 0
+        h0[:, data.sen_idx] = 0
 
         h1 = h.clone()
-        h1[:, args.sens_idx] = 1
+        h1[:, data.sen_idx] = 1
         batch_size = h1.shape[0]
         z1 = F.normalize(h0)
         z2 = F.normalize(h1)
@@ -227,18 +224,18 @@ class DE_A(nn.Module):
 def train_data_edit(data, de_a,de_x,args):
     data33 = data.clone()
 
-    optimizer_X = optim.Adam([de_x.delta_X], lr=0.5)
-    optimizer_A = optim.Adam([de_a.delta_A], lr=0.5)
+    optimizer_X = optim.Adam([de_x.delta_X], lr=0.001)
+    optimizer_A = optim.Adam([de_a.delta_A], lr=0.001)
     # pbar1 =  tqdm(range(100))
 
-    for epoch in range(50):  # pbar1:
-        for epoch1 in range(10):
+    for epoch in range(args.de_separate_epochs):  # pbar1:
+        for epoch1 in range(args.de_separate_node_epochs):
             # pbar1.set_description("epoch {}".format(epoch))
             optimizer_X.zero_grad()
             loss1, _, _ = de_x(data33,args)
             loss1.backward()
             optimizer_X.step()
-        for epoch2 in range(10):
+        for epoch2 in range(args.de_separate_edge_epochs):
             optimizer_A.zero_grad()
             loss2, _, _ = de_a(data33,args)
             loss2.backward()
@@ -248,10 +245,7 @@ def train_data_edit(data, de_a,de_x,args):
         loss, delta_X, deA = de_x(data33,args)
         loss,dex,delta_A = de_a(data33,args)
         data33.x = data33.x + delta_X
-
-        # import ipdb; ipdb.set_trace()
         # 对敏感属性不进行训练
-        data33.x[:, 1] = data33.sens
-        # data33.edge_index = (data33.edge_index + delta_A).type_as(data33.edge_index)
+        data33.x[:, data33.sen_idx] = data.x[:, data.sen_idx]
         data33.edge_weight = delta_A
     return data33

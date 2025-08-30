@@ -10,30 +10,7 @@ from scipy.sparse import coo_matrix
 from torch_geometric.nn.conv.gcn_conv import gcn_norm
 from homophily import edge_homophily, node_homophily, class_homophily, aggregation_homophily, node_homophily_abs
 
-class channel_masker(nn.Module):
-    def __init__(self, args):
-        super(channel_masker, self).__init__()
 
-        self.weights = nn.Parameter(torch.distributions.Uniform(
-            0, 1).sample((args.num_features, 2)))
-
-    def reset_parameters(self):
-        self.weights = torch.nn.init.xavier_uniform_(self.weights)
-
-    def forward(self):
-        return self.weights
-
-# def edge_homophily(graph, labels, ignore_negative=False):
-#     src_node, targ_node = graph[0], graph[1]
-#     matching = labels[src_node] == labels[targ_node]
-#     # labeled_mask = (labels[src_node] >= 0) * (labels[targ_node] >= 0)
-#
-#     edge_hom = torch.mean(matching.float())
-#     # if ignore_negative:
-#     #     edge_hom = np.mean(matching[labeled_mask])
-#     # else:
-#     #     edge_hom = np.mean(matching)
-#     return edge_hom
 
 class MLP_discriminator(torch.nn.Module):
     def __init__(self, args):
