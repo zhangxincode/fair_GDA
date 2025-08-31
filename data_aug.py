@@ -150,27 +150,27 @@ def run(data, args, data2):
     A2 = torch.spmm(adj, adj)
 
     MLP_F = MLP_encoder(args).to(args.device)
-    optimizer_F = torch.optim.Adam(params=MLP_F.parameters(), lr=0.01)
+    optimizer_F = torch.optim.Adam(params=MLP_F.parameters(), lr=args.fairnet_lr)
 
     MLP_B = MLP_encoder(args).to(args.device)
-    optimizer_B = torch.optim.Adam(params=MLP_B.parameters(), lr=0.01)
+    optimizer_B = torch.optim.Adam(params=MLP_B.parameters(), lr=args.baisnet_lr)
 
     discriminator_F = MLP_discriminator(args).to(args.device)
-    optimizer_D_F = torch.optim.Adam(params=discriminator_F.parameters(), lr=0.01)
+    optimizer_D_F = torch.optim.Adam(params=discriminator_F.parameters(), lr=args.discri_F_lr)
 
     discriminator_B = MLP_discriminator(args).to(args.device)
-    optimizer_D_B = torch.optim.Adam(params=discriminator_B.parameters(), lr=0.01)
+    optimizer_D_B = torch.optim.Adam(params=discriminator_B.parameters(), lr=args.discri_B_lr)
 
     classifier = torch.load('./model_para/classifier_best_0.pth', weights_only=False).to(args.device)
-    optimizer_C = torch.optim.Adam(params=classifier.parameters(), lr=0.01)
+    optimizer_C = torch.optim.Adam(params=classifier.parameters(), lr=args.classify_lr)
 
     encoder = torch.load('./model_para/encoder_best_0.pth', weights_only=False).to(args.device)
-    optimizer_E = torch.optim.Adam(params=encoder.parameters(), lr=0.01)
+    optimizer_E = torch.optim.Adam(params=encoder.parameters(), lr=args.encoder_lr)
 
 
 
     data3 = data.clone()
-    data_aug = DataAug(classifier, encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1])
+    data_aug = DataAug(classifier, encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1],args)
     de_a = DE_A(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1],args)
     de_x = DE_X(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1],args)
     data1 = update_labels_by_neighbors_with_predictions(data3, encoder, classifier)
@@ -351,13 +351,19 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', type=int, help="使用的gpu编号,若没有自动变为cpu",default=0)
 
     parser.add_argument('--dropout', type=float, help="编码器encoder的dropout概率",default=0.5)
-
-    parser.add_argument('--K', type=int, default=10)
-    parser.add_argument('--top_k', type=int, default=10)
+    parser.add_argument('--top_k', type=int,help="利用superman算法算得与敏感属性前K个相似的特征",default=10)
     parser.add_argument('--alpha', type=float, help="计算auc_rocs+F1+acc-args.alpha*(tmp_parity+tmp_equality)",default=1)
-    parser.add_argument('--beta', type=float, help="计算acc-args.beta * (tmp_parity + tmp_equality)作为选择最好模型的指标从而保存",default=1)
 
+    # 学习率参数
+    parser.add_argument('--fairnet_lr', type=float, help="公平网络学习率 ", default=0.01)
+    parser.add_argument('--baisnet_lr', type=float, help="偏见网络学习率", default=0.01)
+    parser.add_argument('--discri_F_lr', type=float, help="判别器F的学习率 ", default=0.01)
+    parser.add_argument('--discri_B_lr', type=float, help="判别器B的学习率 ", default=0.01)
+    parser.add_argument('--classify_lr', type=float, help="分类器的学习率 ", default=0.01)
+    parser.add_argument('--encoder_lr', type=float, help="编码器的学习率 ", default=0.01)
 
+    parser.add_argument('--de_feature_lr', type=float, help="数据编辑结点特征训练的学习率 ", default=0.001)
+    parser.add_argument('--de_edge_lr', type=float, help="数据编辑边特征训练的学习率 ", default=0.001)
 
     # 训练轮数参数调整
     parser.add_argument('--epochs', type=int, help="整体模型微调的总轮数", default=20)

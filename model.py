@@ -66,6 +66,10 @@ class MLP_encoder(torch.nn.Module):
 
 
 class GCN_encoder_scatter(torch.nn.Module):
+    '''
+    本研究base模型
+
+    '''
     def __init__(self, args):
         super(GCN_encoder_scatter, self).__init__()
 

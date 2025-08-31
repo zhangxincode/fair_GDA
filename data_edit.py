@@ -16,7 +16,7 @@ import math
 from pandas import DataFrame
 from utils import read_config
 class DataAug(nn.Module):
-    def __init__(self, classifier, encoder,num_nodes, num_features,num_edge):
+    def __init__(self, classifier, encoder,num_nodes, num_features,num_edge,args):
         super(DataAug, self).__init__()
         self.classifier = classifier
         self.encoder = encoder
@@ -25,11 +25,11 @@ class DataAug(nn.Module):
         self.temperature = 0.7
 
         # 初始化扰动参数，确保这些参数是可训练的
-        self.delta_X = torch.zeros_like(torch.ones(num_nodes,num_features), requires_grad=True)  # 节点特征扰动
+        self.delta_X = torch.zeros_like(torch.ones(num_nodes,num_features), requires_grad=True,device=args.device)  # 节点特征扰动
 
         # `delta_A` 用于扰动边索引，所以它的维度应该和 edge_index 一样
         # self.delta_A = torch.zeros_like(torch.ones(2,num_edge), dtype=torch.float, requires_grad=True)  # 邻接矩阵扰动
-        self.delta_A = torch.zeros_like(torch.ones(num_edge), dtype=torch.float, requires_grad=True)  # 邻接矩阵扰动
+        self.delta_A = torch.zeros_like(torch.ones(num_edge), dtype=torch.float, requires_grad=True,device=args.device)  # 邻接矩阵扰动
 
         # 冻结 encoder 和 classifier 的参数
         for param in self.encoder.parameters():
@@ -40,13 +40,11 @@ class DataAug(nn.Module):
 
     def forward(self, data,args,eps = 1e-6):
 
-
+        self.delta_X = self.delta_X .to(args.device)
         x1 = data.x + self.delta_X  # 可训练扰动
 
 
         h = self.encoder(x1, data.edge_index, data.adj_norm_sp,edge_weight=self.delta_A)
-
-
         h0 = h.clone()
         h0[:, h0.sen_idx] = 0
 
@@ -223,8 +221,8 @@ class DE_A(nn.Module):
 def train_data_edit(data, de_a,de_x,args):
     data33 = data.clone()
 
-    optimizer_X = optim.Adam([de_x.delta_X], lr=0.001)
-    optimizer_A = optim.Adam([de_a.delta_A], lr=0.001)
+    optimizer_X = optim.Adam([de_x.delta_X], lr=args.de_feature_lr)
+    optimizer_A = optim.Adam([de_a.delta_A], lr=args.de_edge_lr)
     # pbar1 =  tqdm(range(100))
 
     for epoch in range(args.de_separate_epochs):  # pbar1:
