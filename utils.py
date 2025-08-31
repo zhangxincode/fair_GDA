@@ -12,6 +12,114 @@ import pandas as pd
 from sklearn.manifold import TSNE
 import yaml
 
+
+
+
+
+
+
+
+
+def eval_tool(pre,y,sens):
+    acc = ((pre == y).sum() / y.shape[0])  # 伪标签准确率
+    acc_1 = ((pre == 1).int() * (y == 1).int()).sum() / (y == 1).int().sum()  # 伪标签为1的准确率
+    acc_0 = ((pre == 0).int() * (y == 0).int()).sum() / (y == 0).int().sum()  # 伪标签为0的准确率
+    TP = ((pre == 1).int() * (y == 1).int()).sum()
+    TN = ((pre == 0).int() * (y == 0).int()).sum()
+    FP = ((pre == 1).int() * (y == 0).int()).sum()
+    FN = ((pre == 0).int() * (y == 1).int()).sum()
+    F1 = 2*TP/(2*TP+FP+FN) # 针对数据不平衡问题
+    parity, equality = fair_metric(pre.cpu().numpy(), y.cpu().numpy(), sens.cpu().numpy())
+    result = {
+        'acc': acc,
+        'acc_1': acc_1,
+        'acc_0': acc_0,
+        'F1': F1,
+        'TP': TP,
+        'TN': TN,
+        'FP': FP,
+        'FN': FN,
+        'parity': parity,
+        'equality': equality
+    }
+    return result
+
+
+import torch
+from torch_sparse import SparseTensor
+
+@torch.no_grad()
+def update_labels_by_neighbors_with_predictions(
+    data, encoder, classifier,
+    alpha: float = 0.25,   # 传播强度（越小越稳，0.05~0.2 常用）
+    K: int = 3,           # 迭代步数（2~10，过大易过平滑）
+    add_self_loop: bool = True
+):
+    """
+    1) 用 encoder+classifier 生成初始预测 P0（概率分布）；
+    2) 用对称归一化稀疏邻接 A_sym = D^{-1/2}(A+I)D^{-1/2} 做 K 次传播：
+           P <- (1 - alpha) * P0 + alpha * (A_sym @ P)
+       每步保持行为概率分布并数值安全；
+    3) 输出 new_y = argmax(P)。
+    """
+    eps = 1e-12
+
+    # ---------- 1) 初始预测 ----------
+    encoder.eval(); classifier.eval()
+    h = encoder(data.x, data.edge_index, getattr(data, "adj_norm_sp", None),data.edge_weight)
+    logits = classifier(h)
+
+    # 支持二分类/多分类：
+    if logits.dim() == 1 or logits.size(-1) == 1:
+        # 二分类：sigmoid -> (1-p, p)
+        p = torch.sigmoid(logits.view(-1)).clamp(0.0 + 1e-6, 1.0 - 1e-6)
+        P0 = torch.stack([1 - p, p], dim=1)  # (N, 2)
+    else:
+        # 多分类：softmax
+        P0 = torch.softmax(logits, dim=1)
+
+    P = P0.clone()
+
+    # ---------- 2) 构建对称归一化稀疏邻接 A_sym ----------
+    num_nodes = data.x.size(0)
+    row, col = data.edge_index  # shape: (2, E)
+
+    A = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+    if add_self_loop:
+        A = A.set_diag()
+
+    deg = A.sum(dim=1).to(torch.float)          # 度 D (N,)
+    deg = deg.clamp_min(eps)
+    d_is = deg.pow(-0.5)                        # D^{-1/2}
+    A_sym = A.mul(d_is.view(-1, 1)).mul(d_is.view(1, -1))  # D^{-1/2} A D^{-1/2}
+
+    # ---------- 3) 稳定传播 ----------
+    for _ in range(K):
+        neighbor = A_sym.matmul(P)                       # 稀疏×稠密
+        P = (1 - alpha) * P0 + alpha * neighbor
+        P = P / P.sum(dim=1, keepdim=True).clamp_min(eps)  # 保持为概率分布
+
+    # ---------- 4) 输出 ----------
+    new_labels = P.argmax(dim=1)
+    data.new_y = new_labels
+    data.new_probs = P      # 若后续要用概率，可顺带存下
+    # import ipdb; ipdb.set_trace()
+    eval_tool(torch.argmax(P0, dim=1), data.y,data.sens)  # 直接预测的伪标签准确率
+    eval_tool(data.new_y, data.y,data.sens)  # 传播后的伪标签准确率
+    return data
+
+
+
+
+
+
+
+
+
+
+
+
+
 def drop_feature(x, drop_prob, sens_idx, sens_flag=True):
     drop_mask = torch.empty(
         (x.size(1), ),

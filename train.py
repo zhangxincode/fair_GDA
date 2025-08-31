@@ -372,7 +372,7 @@ if __name__ == '__main__':
                     args.dataset,  args.strlist[i], args.top_k)
                 data2.append(datatmp)
         elif args.dataset == "bail":
-            args.strlist = ['_B0','_B1','_B2','_B3','_B4']
+            args.strlist = ['_B1','_B2','_B3','_B4']
             for i in range(len(args.strlist)):
                 datatmp, _, _, _, _, _ = get_dataset(
                     args.dataset,  args.strlist[i], args.top_k)
