@@ -171,8 +171,8 @@ def run(data, args, data2):
 
     data3 = data.clone()
     data_aug = DataAug(classifier, encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1])
-    de_a = DE_A(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1])
-    de_x = DE_X(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1])
+    de_a = DE_A(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1],args)
+    de_x = DE_X(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1],args)
     data1 = update_labels_by_neighbors_with_predictions(data3, encoder, classifier)
     '==========train============='
     for count in range(args.runs):

@@ -109,7 +109,7 @@ def train_data_aug(data,data_aug,args):
 
 
 class DE_X(nn.Module):
-    def __init__(self, encoder, num_nodes, num_features, num_edge):
+    def __init__(self, encoder, num_nodes, num_features, num_edge,args):
         super(DE_X, self).__init__()
         self.encoder = encoder
         self.num_nodes = num_nodes
@@ -117,7 +117,7 @@ class DE_X(nn.Module):
         self.temperature = 0.7
 
         # 初始化扰动参数，确保这些参数是可训练的
-        self.delta_X = torch.zeros_like(torch.ones(num_nodes, num_features), requires_grad=True)  # 节点特征扰动
+        self.delta_X = torch.zeros_like(torch.ones(num_nodes, num_features), requires_grad=True,device=args.device)  # 节点特征扰动
         self.delta_A = torch.zeros_like(torch.ones(num_edge), dtype=torch.float, requires_grad=False)  # 邻接矩阵扰动
 
         # 冻结 encoder 和 classifier 的参数
@@ -126,12 +126,11 @@ class DE_X(nn.Module):
 
 
     def forward(self, data,args, eps=1e-6):
-
+        self.delta_X = self.delta_X.to(args.device)
         x1 = data.x + self.delta_X  # 可训练扰动
 
-        h = self.encoder(x1, data.edge_index, data.adj_norm_sp, edge_weight=self.delta_A)
 
-        # h = self.encoder(x1, edge_index,adj_norm_sp)
+        h = self.encoder(x1, data.edge_index, data.adj_norm_sp, edge_weight=self.delta_A.to(args.device))
 
         h0 = h.clone()
         h0[:, data.sen_idx] = 0
@@ -162,7 +161,7 @@ class DE_X(nn.Module):
         return loss, self.delta_X, self.delta_A
 
 class DE_A(nn.Module):
-    def __init__(self, encoder, num_nodes, num_features, num_edge):
+    def __init__(self, encoder, num_nodes, num_features, num_edge,args):
         super(DE_A, self).__init__()
         self.encoder = encoder
         self.num_nodes = num_nodes
@@ -171,7 +170,7 @@ class DE_A(nn.Module):
 
         # 初始化扰动参数，确保这些参数是可训练的
         self.delta_X = torch.zeros_like(torch.ones(num_nodes, num_features), requires_grad=False)  # 节点特征扰动
-        self.delta_A = torch.zeros_like(torch.ones(num_edge), dtype=torch.float, requires_grad=True)  # 邻接矩阵扰动
+        self.delta_A = torch.zeros_like(torch.ones(num_edge), dtype=torch.float, requires_grad=True,device=args.device)  # 邻接矩阵扰动
 
         # 冻结 encoder 和 classifier 的参数
         for param in self.encoder.parameters():
@@ -179,7 +178,7 @@ class DE_A(nn.Module):
 
 
     def forward(self, data,args, eps=1e-6):
-
+        self.delta_X = self.delta_X.to(args.device)
         x1 = data.x + self.delta_X  # 可训练扰动
 
         h = self.encoder(x1, data.edge_index, data.adj_norm_sp, edge_weight=self.delta_A)
