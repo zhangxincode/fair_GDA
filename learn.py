@@ -67,34 +67,12 @@ def evaluate_ged3(x, classifier, discriminator, encoder, data, args):
     encoder.eval()
 
     with torch.no_grad():
-        if(args.f_mask == 'yes'):
-            outputs, loss = [], 0
-            for k in range(args.K):
-                x = data.x
+        h = encoder(data.x, data.edge_index, data.adj_norm_sp,data.edge_weight)
+        output = classifier(h)
+        # output2 = discriminator(h)
 
-                h = encoder(x, data.edge_index, data.adj_norm_sp,data.edge_weight)
-                output = classifier(h)
-
-
-
-
-                # output2 = discriminator(h)
-
-                # loss += F.mse_loss(output.view(-1), 0.5 * torch.ones_like(output.view(-1))) + F.binary_cross_entropy_with_logits(
-                #     output[data.val_mask], data.y[data.val_mask].unsqueeze(1))
-
-                outputs.append(output)
-
-            # loss_val = loss / args.K
-
-            output = torch.stack(outputs).mean(dim=0)
-        else:
-            h = encoder(data.x, data.edge_index, data.adj_norm_sp,data.edge_weight)
-            output = classifier(h)
-            # output2 = discriminator(h)
-
-            # loss_val = F.mse_loss(output.view(-1), 0.5 * torch.ones_like(output.view(-1))) + F.binary_cross_entropy_with_logits(
-            #     output[data.val_mask], data.y[data.val_mask].unsqueeze(1))
+        # loss_val = F.mse_loss(output.view(-1), 0.5 * torch.ones_like(output.view(-1))) + F.binary_cross_entropy_with_logits(
+        #     output[data.val_mask], data.y[data.val_mask].unsqueeze(1))
 
     accs, auc_rocs, F1s, paritys, equalitys = {}, {}, {}, {}, {}
 
