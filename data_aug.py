@@ -348,7 +348,7 @@ if __name__ == '__main__':
     parser.add_argument('--de_train', type=int, help="数据编辑每几个epoch进行一次训练", default=5)
     parser.add_argument('--de_traintype_switch', type=int, help="是采用结点特征和边共同训练(1)，还是分离训练开关(0)。", default=0)
     parser.add_argument('--seed', type=int,help="初始化种子",default=1)
-    parser.add_argument('--gpu', type=int, help="使用的gpu编号,若没有自动变为cpu",default=-1)
+    parser.add_argument('--gpu', type=int, help="使用的gpu编号,若没有自动变为cpu",default=0)
 
     parser.add_argument('--dropout', type=float, help="编码器encoder的dropout概率",default=0.5)
 
