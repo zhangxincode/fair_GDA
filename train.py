@@ -160,8 +160,8 @@ def run(data, args, data2):
 
                     best_val_tradeoff[i] = auc_rocs['val'] + F1s['val'] + \
                                         accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
-                    # torch.save(encoder, './model_para/encoder_best_{}.pth'.format(count))
-                    # torch.save(classifier, './model_para/classifier_best_{}.pth'.format(count))
+                    torch.save(encoder, './model_para/encoder_best_{}.pth'.format(count))
+                    torch.save(classifier, './model_para/classifier_best_{}.pth'.format(count))
 
         for i in range(len(args.strlist)):
             acc[count][i] = test_acc[i]
@@ -188,7 +188,7 @@ if __name__ == '__main__':
     parser.add_argument('--d_lr', type=float, help="分辨器的学习率", default=0.001)
     parser.add_argument('--c_lr', type=float, help="分类器的学习率", default=0.005)
     parser.add_argument('--e_lr', type=float, help="分类器的学习率", default=0.005)
-    parser.add_argument('--gpus', type=int, help="gpu卡号", default=0)
+    parser.add_argument('--gpu', type=int, help="gpu卡号", default=0)
 
     parser.add_argument('--epochs', type=int, help="训练轮数", default=200)
     parser.add_argument('--dic_epochs', type=int, help="鉴别器的训练轮数",default=2)

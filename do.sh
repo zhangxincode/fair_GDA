@@ -6,6 +6,15 @@ LOG_FILE="log.txt"
 # 清空之前的日志
 > $LOG_FILE
 
+#for j in {1..5}
+#do
+#  echo "===========当前运行第 $j 次===============" | tee -a $LOG_FILE
+#  python train.py 2>&1 | tee -a $LOG_FILE
+#done
+
+
+
+
 for i in _B1 _B2 _B3 _B4
 do
   echo "===========当前数据集：$i===============" | tee -a $LOG_FILE
