@@ -1,0 +1,328 @@
+fine model with DE
+
+
+
+===========当前数据集：_B1===============
+===========当前运行第 1 次===============
+Namespace(dataset='bail', inid='_B1', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B1_B1============
+Acc:  0.8158844765342961
+auc_roc:  0.7506127450980393
+parity:  0.0013244331426149614
+equality:  0.015352013185778224
+f1:  0.5526315789473685
+===========当前运行第 2 次===============
+Namespace(dataset='bail', inid='_B1', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B1_B1============
+Acc:  0.8176895306859205
+auc_roc:  0.7569458434058556
+parity:  0.011522568340750161
+equality:  0.0012714857546504144
+f1:  0.596
+===========当前运行第 3 次===============
+Namespace(dataset='bail', inid='_B1', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B1_B1============
+Acc:  0.7870036101083032
+auc_roc:  0.7603327289820037
+parity:  0.0009800805255350542
+equality:  0.06649399576171422
+f1:  0.6289308176100629
+===========当前运行第 4 次===============
+Namespace(dataset='bail', inid='_B1', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B1_B1============
+Acc:  0.7924187725631769
+auc_roc:  0.7544570910556003
+parity:  0.014767429540156862
+equality:  0.04713915705203675
+f1:  0.6314102564102564
+===========当前运行第 5 次===============
+Namespace(dataset='bail', inid='_B1', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B1_B1============
+Acc:  0.8122743682310469
+auc_roc:  0.7716097569164653
+parity:  0.010674931129476567
+equality:  0.028443607252177983
+f1:  0.6060606060606061
+===========当前运行第 6 次===============
+Namespace(dataset='bail', inid='_B1', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B1_B1============
+Acc:  0.6814079422382672
+auc_roc:  0.713957158205748
+parity:  0.047798792116973965
+equality:  0.013515422651283249
+f1:  0.5035161744022504
+===========当前运行第 7 次===============
+Namespace(dataset='bail', inid='_B1', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B1_B1============
+Acc:  0.8185920577617328
+auc_roc:  0.8145858514638732
+parity:  0.013244331426149614
+equality:  0.02980927713680248
+f1:  0.6325411334552102
+===========当前运行第 8 次===============
+Namespace(dataset='bail', inid='_B1', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B1_B1============
+Acc:  0.8212996389891697
+auc_roc:  0.8078162771958097
+parity:  0.005999682136045764
+equality:  0.040828820343772054
+f1:  0.5975609756097561
+===========当前运行第 9 次===============
+Namespace(dataset='bail', inid='_B1', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B1_B1============
+Acc:  0.8095667870036101
+auc_roc:  0.7997918345420361
+parity:  0.007456558592922241
+equality:  0.03743819166470441
+f1:  0.5950095969289827
+===========当前运行第 10 次===============
+Namespace(dataset='bail', inid='_B1', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B1_B1============
+Acc:  0.7030685920577617
+auc_roc:  0.7578796501477303
+parity:  0.010224623860987492
+equality:  0.052225100070638075
+f1:  0.5293276108726752
+===========当前数据集：_B2===============
+===========当前运行第 1 次===============
+Namespace(dataset='bail', inid='_B2', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B2_B2============
+Acc:  0.8714524207011686
+auc_roc:  0.8952908522880071
+parity:  0.05980578189530081
+equality:  0.0005902026362384349
+f1:  0.752411575562701
+===========当前运行第 2 次===============
+Namespace(dataset='bail', inid='_B2', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B2_B2============
+Acc:  0.823873121869783
+auc_roc:  0.8271768686026939
+parity:  0.044463667820069205
+equality:  0.0005246245655453063
+f1:  0.5886939571150097
+===========当前运行第 3 次===============
+Namespace(dataset='bail', inid='_B2', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B2_B2============
+Acc:  0.7003338898163606
+auc_roc:  0.5
+parity:  0.0
+equality:  0.0
+f1:  0.0
+===========当前运行第 4 次===============
+Namespace(dataset='bail', inid='_B2', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B2_B2============
+Acc:  0.7746243739565943
+auc_roc:  0.8411559058568862
+parity:  0.036454961491237864
+equality:  0.030559380943012665
+f1:  0.4
+===========当前运行第 5 次===============
+Namespace(dataset='bail', inid='_B2', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B2_B2============
+Acc:  0.7003338898163606
+auc_roc:  0.8917998280218193
+parity:  0.0
+equality:  0.0
+f1:  0.0
+===========当前运行第 6 次===============
+Namespace(dataset='bail', inid='_B2', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B2_B2============
+Acc:  0.828881469115192
+auc_roc:  0.7821554377309504
+parity:  0.04411206607880344
+equality:  0.007639845235753173
+f1:  0.605009633911368
+===========当前运行第 7 次===============
+Namespace(dataset='bail', inid='_B2', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B2_B2============
+Acc:  0.7395659432387313
+auc_roc:  0.8023346536034077
+parity:  0.01551512445585445
+equality:  0.00531182372614597
+f1:  0.23529411764705882
+===========当前运行第 8 次===============
+Namespace(dataset='bail', inid='_B2', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B2_B2============
+Acc:  0.7003338898163606
+auc_roc:  0.7545658878954585
+parity:  0.0
+equality:  0.0
+f1:  0.0
+===========当前运行第 9 次===============
+Namespace(dataset='bail', inid='_B2', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B2_B2============
+Acc:  0.7646076794657763
+auc_roc:  0.888715508912653
+parity:  0.027129143877664914
+equality:  0.011574529477342776
+f1:  0.3561643835616438
+===========当前运行第 10 次===============
+Namespace(dataset='bail', inid='_B2', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B2_B2============
+Acc:  0.7612687813021702
+auc_roc:  0.8903821700459162
+parity:  0.03739256613461324
+equality:  0.05233130041314185
+f1:  0.34101382488479265
+===========当前数据集：_B3===============
+===========当前运行第 1 次===============
+Namespace(dataset='bail', inid='_B3', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B3_B3============
+Acc:  0.5485714285714286
+auc_roc:  0.20881543380801687
+parity:  0.0
+equality:  0.0
+f1:  0.7084870848708487
+===========当前运行第 2 次===============
+Namespace(dataset='bail', inid='_B3', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B3_B3============
+Acc:  0.5485714285714286
+auc_roc:  0.5042317708333334
+parity:  0.0
+equality:  0.0
+f1:  0.7084870848708487
+===========当前运行第 3 次===============
+Namespace(dataset='bail', inid='_B3', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B3_B3============
+Acc:  0.5614285714285714
+auc_roc:  0.8768356902689874
+parity:  0.00911944830425615
+equality:  0.0
+f1:  0.7144186046511628
+===========当前运行第 4 次===============
+Namespace(dataset='bail', inid='_B3', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B3_B3============
+Acc:  0.5485714285714286
+auc_roc:  0.6326991857858649
+parity:  0.0
+equality:  0.0
+f1:  0.7084870848708487
+===========当前运行第 5 次===============
+Namespace(dataset='bail', inid='_B3', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B3_B3============
+Acc:  0.5485714285714286
+auc_roc:  0.6794649920886076
+parity:  0.0
+equality:  0.0
+f1:  0.7084870848708487
+===========当前运行第 6 次===============
+Namespace(dataset='bail', inid='_B3', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B3_B3============
+Acc:  0.5485714285714286
+auc_roc:  0.49986093255537967
+parity:  0.0
+equality:  0.0
+f1:  0.7084870848708487
+===========当前运行第 7 次===============
+Namespace(dataset='bail', inid='_B3', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B3_B3============
+Acc:  0.5492857142857143
+auc_roc:  0.8815856160996836
+parity:  0.0013071895424836555
+equality:  0.0
+f1:  0.708814028610983
+===========当前运行第 8 次===============
+Namespace(dataset='bail', inid='_B3', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B3_B3============
+Acc:  0.5485714285714286
+auc_roc:  0.4954427083333333
+parity:  0.0
+equality:  0.0
+f1:  0.7084870848708487
+===========当前运行第 9 次===============
+Namespace(dataset='bail', inid='_B3', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B3_B3============
+Acc:  0.5485714285714286
+auc_roc:  0.6853181863132911
+parity:  0.0
+equality:  0.0
+f1:  0.7084870848708487
+===========当前运行第 10 次===============
+Namespace(dataset='bail', inid='_B3', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B3_B3============
+Acc:  0.5485714285714286
+auc_roc:  0.5
+parity:  0.0
+equality:  0.0
+f1:  0.7084870848708487
+===========当前数据集：_B4===============
+===========当前运行第 1 次===============
+Namespace(dataset='bail', inid='_B4', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B4_B4============
+Acc:  0.8006700167504187
+auc_roc:  0.8995757356923633
+parity:  0.01073518362514514
+equality:  0.054294615042278616
+f1:  0.7373068432671082
+===========当前运行第 2 次===============
+Namespace(dataset='bail', inid='_B4', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B4_B4============
+Acc:  0.31993299832495814
+auc_roc:  0.5
+parity:  0.0
+equality:  0.0
+f1:  0.4847715736040609
+===========当前运行第 3 次===============
+Namespace(dataset='bail', inid='_B4', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B4_B4============
+Acc:  0.31993299832495814
+auc_roc:  0.4955897144920433
+parity:  0.0
+equality:  0.0
+f1:  0.4847715736040609
+===========当前运行第 4 次===============
+Namespace(dataset='bail', inid='_B4', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B4_B4============
+Acc:  0.7420435510887772
+auc_roc:  0.8629845511051506
+parity:  0.012169577195419001
+equality:  0.044058744993324406
+f1:  0.673728813559322
+===========当前运行第 5 次===============
+Namespace(dataset='bail', inid='_B4', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B4_B4============
+Acc:  0.7420435510887772
+auc_roc:  0.8500180538003249
+parity:  0.003096468659638918
+equality:  0.04739652870493993
+f1:  0.6531531531531531
+===========当前运行第 6 次===============
+Namespace(dataset='bail', inid='_B4', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B4_B4============
+Acc:  0.6834170854271356
+auc_roc:  0.8623204291646249
+parity:  0.05498508686049952
+equality:  0.013462394303515812
+f1:  0.6286836935166994
+===========当前运行第 7 次===============
+Namespace(dataset='bail', inid='_B4', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B4_B4============
+Acc:  0.7956448911222781
+auc_roc:  0.8616692027957599
+parity:  0.010712415473236037
+equality:  0.014018691588785048
+f1:  0.6064516129032258
+===========当前运行第 8 次===============
+Namespace(dataset='bail', inid='_B4', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B4_B4============
+Acc:  0.31993299832495814
+auc_roc:  0.3204549557681892
+parity:  0.0
+equality:  0.0
+f1:  0.4847715736040609
+===========当前运行第 9 次===============
+Namespace(dataset='bail', inid='_B4', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B4_B4============
+Acc:  0.6080402010050251
+auc_roc:  0.8843976478477293
+parity:  0.04603720316021942
+equality:  0.03649310191366262
+f1:  0.6033898305084746
+===========当前运行第 10 次===============
+Namespace(dataset='bail', inid='_B4', runs=1, prop='scatter', encoder='GCN', hidden=16, de_train=5, de_traintype_switch=0, seed=1, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=10, class_epochs=50, ad_MLP_F_epochs=20, db_epochs=50, align_epochs=10, de_together_epochs=100, de_separate_epochs=3, de_separate_node_epochs=10, de_separate_edge_epochs=10, strlist=None, device=device(type='cuda', index=0))
+===========_B4_B4============
+Acc:  0.8023450586264657
+auc_roc:  0.8751644185386738
+parity:  0.029928735684524477
+equality:  0.0898976412995105
+f1:  0.7107843137254902
