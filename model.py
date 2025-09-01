@@ -58,10 +58,17 @@ class MLP_encoder(torch.nn.Module):
         #                      channels].clamp_(-self.args.clip_e, self.args.clip_e)
         # self.lin.weight.data.clamp_(-self.args.clip_e, self.args.clip_e)
 
-    def forward(self, x, edge_index=None, mask_node=None):
+    def forward(self, x, edge_index=None, mask_node=None,edge_weights=None):
         h = self.lin(x)
 
         return h
+
+
+
+
+
+
+
 
 
 
@@ -119,6 +126,19 @@ class GCN_encoder_scatter(torch.nn.Module):
         else:
             h1 = self.propagate(h, edge_index)+ self.bias
         return h1
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class GCN_2(nn.Module):
@@ -180,7 +200,7 @@ class GCN_encoder_spmm(torch.nn.Module):
         self.lin.reset_parameters()
         self.bias.data.fill_(0.0)
 
-    def forward(self, x, edge_index, adj_norm_sp):
+    def forward(self, x, edge_index, adj_norm_sp, edge_weight=None):
         h = 1#self.lin(x)
         h = torch.spmm(adj_norm_sp, h) + self.bias
         # h = propagate2(h, edge_index) + self.bias

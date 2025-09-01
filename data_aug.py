@@ -13,15 +13,7 @@ from learn import *
 import argparse
 from tqdm import tqdm
 import warnings
-
 warnings.filterwarnings('ignore')
-import math
-from pandas import DataFrame
-from utils import read_config
-from torch.utils.tensorboard import SummaryWriter       # 引入包
-import copy
-
-import ipdb
 from data_edit import DE_X,DE_A,train_data_edit,train_data_aug,DataAug
 
 
@@ -89,7 +81,6 @@ def run(data, args, data2):
     data1 = update_labels_by_neighbors_with_predictions(data3, encoder, classifier)
     '==========train============='
     for count in range(args.runs):
-        #pbar = tqdm(range(20), unit='epoch')# 20
         for epoch in range(args.epochs):
             ''' 训练判别器F'''
             encoder.eval()
@@ -102,9 +93,7 @@ def run(data, args, data2):
                     h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
                 h_F = MLP_F(h)
                 pred_B = torch.sigmoid(discriminator_F(h_F))
-
                 # 判别器的损失是两个分支损失之和
-                # import ipdb; ipdb.set_trace()
                 loss_D = criterion(pred_B.view(-1), data1.x[:,data1.sen_idx])
                 loss_D.backward()
                 optimizer_D_F.step()
@@ -142,9 +131,7 @@ def run(data, args, data2):
                     h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
                 h_F = MLP_F(h)
                 pred_F_adv = discriminator_F(h_F)
-                # import ipdb; ipdb.set_trace()
                 loss_adv_F = criterion(pred_F_adv.view(-1),0.5 * torch.ones_like(pred_F_adv.view(-1)))
-
                 loss_adv_F.backward()
                 optimizer_F.step()
 
@@ -177,6 +164,8 @@ def run(data, args, data2):
                 optimizer_B.zero_grad()
                 optimizer_E.zero_grad()
                 h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
+
+                # 分类损失
                 h_F = MLP_F(h)
                 h_B = MLP_B(h)
                 logits = torch.sigmoid(classifier(h_F))
@@ -187,7 +176,41 @@ def run(data, args, data2):
                 hB = F.normalize(h_B, dim=1)
                 cos_sim = (hF * hB).sum(dim=1)
                 loss_ortho = (cos_sim ** 2).mean()
-                loss = 0.9*task_loss + 0.1 * loss_ortho
+
+                # 相似性损失
+                h0 = h.clone()
+                h0[:, data.sen_idx] = 0
+
+                h1 = h.clone()
+                h1[:, data.sen_idx] = 1
+                batch_size = h1.shape[0]
+                z1 = F.normalize(h0)
+                z2 = F.normalize(h1)
+                sim = torch.mm(z1, z2.t()) / self.temperature  # [batch_size, batch_size]
+
+                # 构造正样本的相似度向量（对角线）
+                pos_sim = sim.diag().view(batch_size, 1)  # [batch_size, 1]
+
+                denom = torch.logsumexp(sim, dim=1, keepdim=True)  # [batch_size, 1]
+
+                # 每个锚点的损失： - (正样本的相似度 - 分母)
+                loss_i = - (pos_sim - denom).mean()
+
+                # 对称地，从z2到z1
+                denom_j = torch.logsumexp(sim.t(), dim=1, keepdim=True)
+                loss_j = - (pos_sim - denom_j).mean()  # 注意，这里正样本的相似度还是对角线，但转置后对角线不变
+
+                # 或者，也可以重新计算以z2为锚点的正样本，但注意，正样本还是对角线，所以可以直接用sim.t().diag()
+                # 但这里我们直接使用对称性，用同样的pos_sim（因为对角线不变）
+
+                loss_similar = (loss_i + loss_j) / 2
+
+
+
+
+
+
+                loss = 0.8*task_loss + 0.1 * loss_ortho + 0.1 * loss_similar
                 loss.backward()
                 optimizer_C.step()
                 optimizer_F.step()
@@ -293,14 +316,13 @@ if __name__ == '__main__':
                         default=10)
 
 
-
-
-
-
     args = parser.parse_args()
     args.strlist = None
     args.device = torch.device(f'cuda:{args.gpu}' if torch.cuda.is_available() else 'cpu')
     print(args)
+
+
+    # 获取数据
     data, _ , args.corr_sens, args.corr_idx, args.x_min, args.x_max = get_dataset(
         args.dataset, args.inid, args.top_k)
 
