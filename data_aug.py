@@ -177,40 +177,40 @@ def run(data, args, data2):
                 cos_sim = (hF * hB).sum(dim=1)
                 loss_ortho = (cos_sim ** 2).mean()
 
-                # # 相似性损失
-                # h0 = h.clone()
-                # h0[:, data.sen_idx] = 0
-                #
-                # h1 = h.clone()
-                # h1[:, data.sen_idx] = 1
-                # batch_size = h1.shape[0]
-                # z1 = F.normalize(h0)
-                # z2 = F.normalize(h1)
-                # sim = torch.mm(z1, z2.t()) / 0.5  # [batch_size, batch_size]
-                #
-                # # 构造正样本的相似度向量（对角线）
-                # pos_sim = sim.diag().view(batch_size, 1)  # [batch_size, 1]
-                #
-                # denom = torch.logsumexp(sim, dim=1, keepdim=True)  # [batch_size, 1]
-                #
-                # # 每个锚点的损失： - (正样本的相似度 - 分母)
-                # loss_i = - (pos_sim - denom).mean()
-                #
-                # # 对称地，从z2到z1
-                # denom_j = torch.logsumexp(sim.t(), dim=1, keepdim=True)
-                # loss_j = - (pos_sim - denom_j).mean()  # 注意，这里正样本的相似度还是对角线，但转置后对角线不变
-                #
-                # # 或者，也可以重新计算以z2为锚点的正样本，但注意，正样本还是对角线，所以可以直接用sim.t().diag()
-                # # 但这里我们直接使用对称性，用同样的pos_sim（因为对角线不变）
-                #
-                # loss_similar = (loss_i + loss_j) / 2
+                # 相似性损失
+                h0 = h.clone()
+                h0[:, data.sen_idx] = 0
+
+                h1 = h.clone()
+                h1[:, data.sen_idx] = 1
+                batch_size = h1.shape[0]
+                z1 = F.normalize(h0)
+                z2 = F.normalize(h1)
+                sim = torch.mm(z1, z2.t()) / 0.5  # [batch_size, batch_size]
+
+                # 构造正样本的相似度向量（对角线）
+                pos_sim = sim.diag().view(batch_size, 1)  # [batch_size, 1]
+
+                denom = torch.logsumexp(sim, dim=1, keepdim=True)  # [batch_size, 1]
+
+                # 每个锚点的损失： - (正样本的相似度 - 分母)
+                loss_i = - (pos_sim - denom).mean()
+
+                # 对称地，从z2到z1
+                denom_j = torch.logsumexp(sim.t(), dim=1, keepdim=True)
+                loss_j = - (pos_sim - denom_j).mean()  # 注意，这里正样本的相似度还是对角线，但转置后对角线不变
+
+                # 或者，也可以重新计算以z2为锚点的正样本，但注意，正样本还是对角线，所以可以直接用sim.t().diag()
+                # 但这里我们直接使用对称性，用同样的pos_sim（因为对角线不变）
+
+                loss_similar = (loss_i + loss_j) / 2
 
 
 
 
 
 
-                loss = 0.8*task_loss + 0.1 * loss_ortho # + 0.1 * loss_similar
+                loss = 0.8*task_loss + 0.1 * loss_ortho + 0.1 * loss_similar
                 loss.backward()
                 optimizer_C.step()
                 optimizer_F.step()
@@ -254,12 +254,12 @@ def run(data, args, data2):
                     best_val_tradeoff[i] = auc_rocs['val'] + F1s['val'] + \
                                         accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
 
-            # # 数据编辑训练
-            # if (epoch+1)%args.de_train == 0:
-            #     if args.de_traintype_switch==0:
-            #         data1 = train_data_edit(data1,de_a,de_x,args)  # xa单独训练
-            #     elif args.de_traintype_switch==1:
-            #         data1 = train_data_aug(data1,data_aug,args) # xa合并训练
+            # 数据编辑训练
+            if (epoch+1)%args.de_train == 0:
+                if args.de_traintype_switch==0:
+                    data1 = train_data_edit(data1,de_a,de_x,args)  # xa单独训练
+                elif args.de_traintype_switch==1:
+                    data1 = train_data_aug(data1,data_aug,args) # xa合并训练
 
 
         for i in range(len(args.strlist)):
