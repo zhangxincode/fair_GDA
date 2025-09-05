@@ -202,21 +202,47 @@ def propagate2(x, edge_index):
 
 
 def seed_everything(seed=0):
+
+    # Python hash
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
+    # Python random
     random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
+
+    # Numpy
     np.random.seed(seed)
+
+    # PyTorch CPU
+    torch.manual_seed(seed)
     torch.backends.cudnn.allow_tf32 = False
 
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.enabled = True
-    # torch.use_deterministic_algorithms(True)
-
-    torch.manual_seed(seed)
+    # PyTorch CUDA
+    torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
+
+    # cuDNN
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
+    # 强制 PyTorch 1.8+ 所有操作确定性
+    if hasattr(torch, 'use_deterministic_algorithms'):
+        torch.use_deterministic_algorithms(True)
+
+    # random.seed(seed)
+    # torch.manual_seed(seed)
+    # torch.cuda.manual_seed(seed)
+    # np.random.seed(seed)
+    # torch.backends.cudnn.allow_tf32 = False
+    #
+    # os.environ['PYTHONHASHSEED'] = str(seed)
+    # torch.backends.cudnn.deterministic = True
+    # torch.backends.cudnn.enabled = True
+    # # torch.use_deterministic_algorithms(True)
+    #
+    # torch.manual_seed(seed)
+    # torch.cuda.manual_seed_all(seed)
+    # torch.backends.cudnn.deterministic = True
+    # torch.backends.cudnn.benchmark = False
 
 
 def fair_metric(pred, labels, sens):

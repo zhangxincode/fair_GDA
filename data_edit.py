@@ -241,8 +241,10 @@ def train_data_edit(data, de_a,de_x,args):
     with torch.no_grad():
         loss, delta_X, deA = de_x(data33,args)
         loss,dex,delta_A = de_a(data33,args)
+
         data33.x = data33.x + delta_X
         # 对敏感属性不进行训练
         data33.x[:, data33.sen_idx] = data.x[:, data.sen_idx]
+
         data33.edge_weight = delta_A
     return data33

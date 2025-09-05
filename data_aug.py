@@ -24,7 +24,7 @@ from data_edit import DE_X,DE_A,train_data_edit,train_data_aug,DataAug
 
 def run(data, args, data2):
     criterion = nn.BCEWithLogitsLoss()
-    seed_everything(args.seed)
+
     acc, f1, auc_roc, parity, equality = np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs, len(data2)])
     data = data.to(args.device)
     for i in range(len(data2)):
@@ -81,6 +81,7 @@ def run(data, args, data2):
     data1 = update_labels_by_neighbors_with_predictions(data3, encoder, classifier)
     '==========train============='
     for count in range(args.runs):
+        seed_everything(args.seed+count)
         discriminator_B.reset_parameters()
         discriminator_F.reset_parameters()
         classifier.reset_parameters()
@@ -212,11 +213,7 @@ def run(data, args, data2):
 
                 loss_similar = (loss_i + loss_j) / 2
 
-
-
-
-
-
+                #loss = (0.5 * task_loss + 0.2 * loss_ortho ) / (task_loss + loss_ortho )
                 loss = (0.5*task_loss + 0.2 * loss_ortho + 0.3 * loss_similar)/(task_loss + loss_ortho + loss_similar)
                 loss.backward()
                 optimizer_C.step()
@@ -283,7 +280,7 @@ def run(data, args, data2):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str,help="数据集种类",default='bail')#german
-    parser.add_argument('--inid', type=str, help="作为输入的数据集",default='_B2')
+    parser.add_argument('--inid', type=str, help="作为输入的数据集",default='_B1')
     parser.add_argument('--runs', type=int, help="运行次数",default=5) # 5
 
     parser.add_argument('--encoder', type=str,help="编码器encoder种类", default='GCN')
@@ -291,7 +288,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--hidden', type=int,help="编码器encoder输出特征的维度 ", default=16)
 
-    parser.add_argument('--seed', type=int,help="初始化种子",default=5)
+    parser.add_argument('--seed', type=int,help="初始化种子",default=14)# B1->14
     parser.add_argument('--gpu', type=int, help="使用的gpu编号,若没有自动变为cpu",default=0)
 
     parser.add_argument('--dropout', type=float, help="编码器encoder的dropout概率",default=0.5)
@@ -334,7 +331,7 @@ if __name__ == '__main__':
     args.strlist = None
     args.device = torch.device(f'cuda:{args.gpu}' if torch.cuda.is_available() else 'cpu')
     print(args)
-
+    seed_everything(args.seed)
 
     # 获取数据
     data, _ , args.corr_sens, args.corr_idx, args.x_min, args.x_max = get_dataset(
@@ -387,16 +384,16 @@ if __name__ == '__main__':
         print("==========={}============".format(args.inid+args.strlist[i]))
         print('Acc     :',['{:.5f}'.format(x)if x!=0 else "feile!!" for x in acc.T[i]])
         print('auc_roc :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in auc_roc.T[i]])
-        print('F1      :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in auc_roc.T[i]])
+        print('F1      :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in f1.T[i]])
         print('parity  :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in parity.T[i]])
         print('equality:',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in equality.T[i]])
     for i in range(len(args.strlist)):
         print("==========={}============".format(args.inid+args.strlist[i]))
-        print('Acc     :{:.5f}'.format( np.mean(acc.T[i])))
-        print('auc_roc :{:.5f}'.format( np.mean(auc_roc.T[i])))
-        print('F1      :{:.5f}'.format( np.mean(f1.T[i])))
-        print('parity  :{:.5f}'.format( np.mean(parity.T[i])))
-        print('equality:{:.5f}'.format( np.mean(equality.T[i])))
+        print('Acc     :{:.5f}'.format( 100*np.mean(acc.T[i])))
+        print('auc_roc :{:.5f}'.format( 100*np.mean(auc_roc.T[i])))
+        print('F1      :{:.5f}'.format( 100*np.mean(f1.T[i])))
+        print('parity  :{:.5f}'.format( 100*np.mean(parity.T[i])))
+        print('equality:{:.5f}'.format( 100*np.mean(equality.T[i])))
 
 
 
