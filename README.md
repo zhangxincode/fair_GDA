@@ -8,7 +8,7 @@ python train.py
 ```
 
 
-在source domain (数据集B_0)中进行测试：
+在source domain (数据集B_0)训练后进行测试：
 
 ```
 python test.py
