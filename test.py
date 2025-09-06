@@ -172,11 +172,11 @@ if __name__ == '__main__':
 
     for i in range(len(args.strlist)):
         print("==========={}============".format(args.outid+args.strlist[i]))
-        print('Acc     :{:.5f}'.format( np.mean(acc.T[i])))
-        print('auc_roc :{:.5f}'.format( np.mean(auc_roc.T[i])))
-        print('F1      :{:.5f}'.format( np.mean(f1.T[i])))
-        print('parity  :{:.5f}'.format( np.mean(parity.T[i])))
-        print('equality:{:.5f}'.format( np.mean(equality.T[i])))
+        print('Acc     :{:.5f}'.format( 100*np.mean(acc.T[i])))
+        print('auc_roc :{:.5f}'.format( 100*np.mean(auc_roc.T[i])))
+        print('F1      :{:.5f}'.format( 100*np.mean(f1.T[i])))
+        print('parity  :{:.5f}'.format( 100*np.mean(parity.T[i])))
+        print('equality:{:.5f}'.format( 100*np.mean(equality.T[i])))
 
 
     # for i in range(len(args.strlist)):
