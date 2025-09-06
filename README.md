@@ -66,24 +66,28 @@ equality:2.06803
 
 
 ### 在target domain (数据集B_2)中进行fine：
-(pytorch) zhangxin@zhangxindeMacBook-Pro FatraGNN-main % 
-```
-python data_aug.py --inid='_B2' --seed=22
-```
+result:
 
-Namespace(dataset='bail', inid='_B2', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=22, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=15, df_epochs=10, db_epochs=10, class_epochs=40, ad_MLP_F_epochs=20, align_epochs=10, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=3, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cpu'))
+(pytorch) zhangxin@zhangxindeMacBook-Pro FatraGNN-main % python data_aug.py --inid='_B2' --seed=24
+Namespace(dataset='bail', inid='_B2', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=24, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.01, baisnet_lr=0.01, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=15, df_epochs=10, db_epochs=10, class_epochs=40, ad_MLP_F_epochs=20, align_epochs=10, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=3, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cpu'))
 ===========_B2_B2============
-Acc     : ['0.87646', '0.83139', '0.81803', '0.73957', '0.71285']
-auc_roc : ['0.88354', '0.83427', '0.83836', '0.81548', '0.72363']
-F1      : ['0.77439', '0.70977', '0.62021', '0.25359', '0.09474']
-parity  : ['0.10796', '0.13904', '0.05928', '0.01493', '0.00625']
-equality: ['0.08481', '0.04745', '0.03163', '0.01501', '0.01211']
+Acc     : ['0.86895', '0.72871', '0.74374', '0.72621', '0.69866']
+auc_roc : ['0.86854', '0.83888', '0.82799', '0.76248', '0.75568']
+F1      : ['0.73070', '0.17722', '0.26024', '0.16327', '0.58553']
+parity  : ['0.07045', '0.01461', '0.00675', '0.01645', '0.14049']
+equality: ['0.04863', '0.01396', '0.00034', '0.01617', '0.01857']
 ===========_B2_B2============
-Acc     :79.56594
-auc_roc :81.90557
-F1      :49.05390
-parity  :6.54906
-equality:3.82024
+Acc     :75.32554
+auc_roc :81.07134
+F1      :38.33917
+parity  :4.97489
+equality:1.95353
+
+
+
+
+
+
 
 
 

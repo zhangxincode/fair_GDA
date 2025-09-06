@@ -214,7 +214,10 @@ def run(data, args, data2):
                 loss_similar = (loss_i + loss_j) / 2
 
                 #loss = (0.5 * task_loss + 0.2 * loss_ortho ) / (task_loss + loss_ortho )
-                loss = (0.5*task_loss + 0.2 * loss_ortho + 0.3 * loss_similar)/(task_loss + loss_ortho + loss_similar)
+                if args.inid == '_B2':
+                    loss = (0.3*task_loss + 0.2 * loss_ortho + 0.5 * loss_similar)/(task_loss + loss_ortho + loss_similar)
+                else: #if args.inid == '_B1':
+                    loss = (0.5*task_loss + 0.2 * loss_ortho + 0.3 * loss_similar)/(task_loss + loss_ortho + loss_similar)
                 loss.backward()
                 optimizer_C.step()
                 optimizer_F.step()
@@ -288,7 +291,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--hidden', type=int,help="编码器encoder输出特征的维度 ", default=16)
 
-    parser.add_argument('--seed', type=int,help="初始化种子",default=14)# B1->14
+    parser.add_argument('--seed', type=int,help="初始化种子",default=22)# B1->14
     parser.add_argument('--gpu', type=int, help="使用的gpu编号,若没有自动变为cpu",default=0)
 
     parser.add_argument('--dropout', type=float, help="编码器encoder的dropout概率",default=0.5)
@@ -296,8 +299,8 @@ if __name__ == '__main__':
     parser.add_argument('--alpha', type=float, help="计算auc_rocs+F1+acc-args.alpha*(tmp_parity+tmp_equality)",default=1)
 
     # 学习率参数
-    parser.add_argument('--fairnet_lr', type=float, help="公平网络学习率 ", default=0.01)
-    parser.add_argument('--baisnet_lr', type=float, help="偏见网络学习率", default=0.01)
+    parser.add_argument('--fairnet_lr', type=float, help="公平网络学习率 ", default=0.001)
+    parser.add_argument('--baisnet_lr', type=float, help="偏见网络学习率", default=0.001)
     parser.add_argument('--discri_F_lr', type=float, help="判别器F的学习率 ", default=0.01)
     parser.add_argument('--discri_B_lr', type=float, help="判别器B的学习率 ", default=0.01)
     parser.add_argument('--classify_lr', type=float, help="分类器的学习率 ", default=0.01)
@@ -308,8 +311,8 @@ if __name__ == '__main__':
 
     # 训练轮数参数调整
     parser.add_argument('--epochs', type=int, help="整体模型微调的总轮数", default=15)
-    parser.add_argument('--df_epochs', type=int, help="判别器F微调的总轮数", default=10)
-    parser.add_argument('--db_epochs', type=int, help="判别器B微调的总轮数", default=10)
+    parser.add_argument('--df_epochs', type=int, help="判别器F微调的总轮数", default=20)
+    parser.add_argument('--db_epochs', type=int, help="判别器B微调的总轮数", default=20)
     parser.add_argument('--class_epochs', type=int, help="训练分类器微调的总轮数", default=40)
     parser.add_argument('--ad_MLP_F_epochs', type=int, help="对抗训练公平网络F微调的总轮数", default=20)
     parser.add_argument('--align_epochs', type=int, help="公平网络与偏见网络疏远，encoder,classify微调的总轮数",default=10)
