@@ -214,10 +214,10 @@ def run(data, args, data2):
                 loss_similar = (loss_i + loss_j) / 2
 
                 #loss = (0.5 * task_loss + 0.2 * loss_ortho ) / (task_loss + loss_ortho )
-                if args.inid == '_B2':
-                    loss = (0.3*task_loss + 0.2 * loss_ortho + 0.5 * loss_similar)/(task_loss + loss_ortho + loss_similar)
-                else: #if args.inid == '_B1':
-                    loss = (0.5*task_loss + 0.2 * loss_ortho + 0.3 * loss_similar)/(task_loss + loss_ortho + loss_similar)
+                # if args.inid == '_B2':
+                #     loss = (0.3*task_loss + 0.2 * loss_ortho + 0.5 * loss_similar)/(task_loss + loss_ortho + loss_similar)
+                # else: #if args.inid == '_B1':
+                loss = (0.5*task_loss + 0.2 * loss_ortho + 0.3 * loss_similar)/(task_loss + loss_ortho + loss_similar)
                 loss.backward()
                 optimizer_C.step()
                 optimizer_F.step()
@@ -289,7 +289,7 @@ if __name__ == '__main__':
     parser.add_argument('--encoder', type=str,help="编码器encoder种类", default='GCN')
     parser.add_argument('--prop', type=str, help="CCN的选择",default='scatter')
 
-    parser.add_argument('--hidden', type=int,help="编码器encoder输出特征的维度 ", default=16)
+    parser.add_argument('--hidden', type=int,help="编码器encoder输出特征的维度 ", default=26)
 
     parser.add_argument('--seed', type=int,help="初始化种子",default=22)# B1->14
     parser.add_argument('--gpu', type=int, help="使用的gpu编号,若没有自动变为cpu",default=0)

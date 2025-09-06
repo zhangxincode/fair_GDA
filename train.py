@@ -156,8 +156,8 @@ def run(data, args, data2):
 
                     best_val_tradeoff[i] = auc_rocs['val'] + F1s['val'] + \
                                         accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
-                    torch.save(encoder, './model_para/encoder_best_{}.pth'.format(count))
-                    torch.save(classifier, './model_para/classifier_best_{}.pth'.format(count))
+                    #torch.save(encoder, './model_para/encoder_best_{}.pth'.format(count))
+                    #torch.save(classifier, './model_para/classifier_best_{}.pth'.format(count))
 
         for i in range(len(args.strlist)):
             acc[count][i] = test_acc[i]
