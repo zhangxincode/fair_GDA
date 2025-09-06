@@ -25,6 +25,9 @@ def train(model, data, optimizer, args):
 
 
 def evaluate_ged4(x, classifier, MLP_F,encoder, data, args):
+    '''
+    fine里面的评估函数
+    '''
     classifier.eval()
 
     encoder.eval()
@@ -63,6 +66,10 @@ def evaluate_ged4(x, classifier, MLP_F,encoder, data, args):
     return accs, auc_rocs, F1s, paritys, equalitys
 
 def evaluate_ged3(x, classifier, discriminator, encoder, data, args):
+    '''
+    train.py中的评估函数
+
+    '''
     classifier.eval()
     encoder.eval()
 
