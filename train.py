@@ -82,6 +82,7 @@ def run(data, args, data2):
 
     for count in range(args.runs):
         print("========={}========".format(count+1))
+        seed_everything(args.seed + count)
         discriminator.reset_parameters()
         classifier.reset_parameters()
         encoder.reset_parameters()
@@ -156,8 +157,8 @@ def run(data, args, data2):
 
                     best_val_tradeoff[i] = auc_rocs['val'] + F1s['val'] + \
                                         accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
-                    #torch.save(encoder, './model_para/encoder_best_{}.pth'.format(count))
-                    #torch.save(classifier, './model_para/classifier_best_{}.pth'.format(count))
+                    torch.save(encoder, './model_para/{}_encoder_best_{}.pth'.format(args.inid,count))
+                    torch.save(classifier, './model_para/{}_classifier_best_{}.pth'.format(args.inid,count))
 
         for i in range(len(args.strlist)):
             acc[count][i] = test_acc[i]
@@ -180,6 +181,7 @@ if __name__ == '__main__':
     parser.add_argument('--alpha', type=float, help="计算auc_rocs+F1+acc-args.alpha*(tmp_parity+tmp_equality)",default=1)
     parser.add_argument('--runs', type=int, help="运行次数", default=5)  # 5
     parser.add_argument('--hidden', type=int, help="编码器encoder输出特征的维度 ", default=16)
+    parser.add_argument('--seed', type=int, help="随机种子", default=12)
 
     parser.add_argument('--d_lr', type=float, help="分辨器的学习率", default=0.01)
     parser.add_argument('--c_lr', type=float, help="分类器的学习率", default=0.005)

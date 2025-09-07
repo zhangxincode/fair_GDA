@@ -3,7 +3,9 @@
 ## source domain
 在source domain (数据集B_0)中进行训练：
 ```
-python train.py
+python train.py dataset='bail' inid='_B0'
+
+python train.py dataset='credit' inid='_C0'
 
 ```
 

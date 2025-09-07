@@ -75,10 +75,10 @@ def run(data, args, data2):
     discriminator_B = MLP_discriminator(args).to(args.device)
     optimizer_D_B = torch.optim.Adam(params=discriminator_B.parameters(), lr=args.discri_B_lr)
 
-    classifier = torch.load('./model_para/classifier_best_0.pth', weights_only=False).to(args.device)
+    classifier = torch.load('./model_para/_C0_classifier_best_0.pth', weights_only=False).to(args.device)
     optimizer_C = torch.optim.Adam(params=classifier.parameters(), lr=args.classify_lr)
 
-    encoder = torch.load('./model_para/encoder_best_0.pth', weights_only=False).to(args.device)
+    encoder = torch.load('./model_para/_C0_encoder_best_0.pth', weights_only=False).to(args.device)
     optimizer_E = torch.optim.Adam(params=encoder.parameters(), lr=args.encoder_lr)
 
 
@@ -298,7 +298,7 @@ if __name__ == '__main__':
     parser.add_argument('--encoder', type=str,help="编码器encoder种类", default='GCN')
     parser.add_argument('--prop', type=str, help="CCN的选择",default='scatter')
 
-    parser.add_argument('--hidden', type=int,help="编码器encoder输出特征的维度 ", default=26)
+    parser.add_argument('--hidden', type=int,help="编码器encoder输出特征的维度 ", default=16)
 
     parser.add_argument('--seed', type=int,help="初始化种子",default=22)# B1->14
     parser.add_argument('--gpu', type=int, help="使用的gpu编号,若没有自动变为cpu",default=0)
