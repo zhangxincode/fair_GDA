@@ -34,7 +34,7 @@ from data_edit import DE_X,DE_A,train_data_edit,train_data_aug,DataAug
 def run(data, args, data2):
     criterion = nn.BCEWithLogitsLoss()
 
-    acc, f1, auc_roc, parity, equality = np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs,len(data2)]), np.zeros([args.runs, len(data2)])
+    acc, f1, auc_roc, parity, equality = np.zeros([len(data2)]), np.zeros([len(data2)]), np.zeros([len(data2)]), np.zeros([len(data2)]), np.zeros([len(data2)])
     data = data.to(args.device)
     for i in range(len(data2)):
         data2[i] = data2[i].to(args.device)
@@ -76,10 +76,16 @@ def run(data, args, data2):
     optimizer_D_B = torch.optim.Adam(params=discriminator_B.parameters(), lr=args.discri_B_lr)
 
     # 注意这的文件地址
-    classifier = torch.load('./model_para/{}/_z_classifier_best_0.pth'.format(args.dataset), weights_only=False).to(args.device)#,map_location='cpu'
+    if args.dataset == 'bail':
+        train_name = "_B0"
+    elif args.dataset == "credit":
+        train_name = "_C0"
+    elif args.dataset == 'pokec':
+        train_name = "_z"
+    classifier = torch.load('./model_para/{}/{}_classifier_best_0.pth'.format(args.dataset,train_name), weights_only=False).to(args.device)#,map_location='cpu'
     optimizer_C = torch.optim.Adam(params=classifier.parameters(), lr=args.classify_lr)
 
-    encoder = torch.load('./model_para/{}/_z_encoder_best_0.pth'.format(args.dataset), weights_only=False).to(args.device)
+    encoder = torch.load('./model_para/{}/{}_encoder_best_0.pth'.format(args.dataset,train_name), weights_only=False).to(args.device)
     optimizer_E = torch.optim.Adam(params=encoder.parameters(), lr=args.encoder_lr)
 
 
@@ -90,201 +96,200 @@ def run(data, args, data2):
     de_x = DE_X(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1],args)
     data1 = update_labels_by_neighbors_with_predictions(data3, encoder, classifier)
     '==========train============='
-    for count in range(args.runs):
-        seed_everything(args.seed+count)
-        discriminator_B.reset_parameters()
-        discriminator_F.reset_parameters()
-        classifier.reset_parameters()
-        encoder.reset_parameters()
-        MLP_F.reset_parameters()
-        MLP_B.reset_parameters()
+    seed_everything(args.seed)
+    discriminator_B.reset_parameters()
+    discriminator_F.reset_parameters()
+    classifier.reset_parameters()
+    encoder.reset_parameters()
+    MLP_F.reset_parameters()
+    MLP_B.reset_parameters()
 
-        for epoch in range(args.epochs):
-            ''' 训练判别器F'''
-            encoder.eval()
-            MLP_F.train()
-            discriminator_F.train()
-            for i in range(args.df_epochs):
-                optimizer_F.zero_grad()
-                optimizer_D_F.zero_grad()
-                with torch.no_grad():
-                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
-                h_F = MLP_F(h)
-                pred_B = discriminator_F(h_F)
-                # 判别器的损失是两个分支损失之和
-                loss_D = criterion(pred_B.view(-1), data1.x[:,data1.sen_idx])
-                loss_D.backward()
-                optimizer_D_F.step()
-                optimizer_F.step()
-
-
-            '''   训练分类器'''
-            encoder.eval()
-            MLP_F.train()
-            classifier.train()
-            for i in range(args.class_epochs):
-                optimizer_F.zero_grad()
-                optimizer_C.zero_grad()
-                with torch.no_grad():
-                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
-                h_F = MLP_F(h)
-                output_class = classifier(h_F)
-                loss_c = criterion(output_class, data1.new_probs[:,1].unsqueeze(1).float())
-                loss_c.backward()
-                optimizer_C.step()
-                optimizer_F.step()
-
-
-
-
-
-            ''' 对抗训练MLP_F '''
-            discriminator_F.eval()
-            classifier.eval()
-            encoder.eval()
-            MLP_F.train()
-            for i in range(args.ad_MLP_F_epochs):
-                optimizer_F.zero_grad()
-                with torch.no_grad():
-                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
-                h_F = MLP_F(h)
-                pred_F_adv = torch.sigmoid(discriminator_F(h_F))
-                loss_adv_F = criterion(pred_F_adv.view(-1),0.5 * torch.ones_like(pred_F_adv.view(-1)))
-                loss_adv_F.backward()
-                optimizer_F.step()
-
-
-            '''训练判别器B'''
-            encoder.eval()
-            MLP_B.train()
-            discriminator_B.train()
-            for i in range(args.db_epochs):
-                optimizer_B.zero_grad()
-                optimizer_D_B.zero_grad()
-                with torch.no_grad():
-                    h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
-                h_B = MLP_B(h)
-                pred_B_adv = discriminator_B(h_B)
-                loss_adv_B = criterion(pred_B_adv.view(-1), data1.x[:, data1.sen_idx])
-                loss_adv_B.backward()
-                optimizer_B.step()
-                optimizer_D_B.step()
-
-
-            '''  异类疏远 '''
-            encoder.train()
-            MLP_F.eval()
-            MLP_B.eval()
-            classifier.train()
-            for i in range(args.align_epochs):
-                optimizer_C.zero_grad()
-                optimizer_F.zero_grad()
-                optimizer_B.zero_grad()
-                optimizer_E.zero_grad()
+    for epoch in range(args.epochs):
+        ''' 训练判别器F'''
+        encoder.eval()
+        MLP_F.train()
+        discriminator_F.train()
+        for i in range(args.df_epochs):
+            optimizer_F.zero_grad()
+            optimizer_D_F.zero_grad()
+            with torch.no_grad():
                 h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
+            h_F = MLP_F(h)
+            pred_B = discriminator_F(h_F)
+            # 判别器的损失是两个分支损失之和
+            loss_D = criterion(pred_B.view(-1), data1.x[:,data1.sen_idx])
+            loss_D.backward()
+            optimizer_D_F.step()
+            optimizer_F.step()
 
-                # 分类损失
-                h_F = MLP_F(h)
-                h_B = MLP_B(h)
-                logits = classifier(h_F)
-                task_loss = criterion(logits, data1.new_probs[:,1].unsqueeze(1).float())
 
-                # 分离损失
-                hF = F.normalize(h_F, dim=1)
-                hB = F.normalize(h_B, dim=1)
-                cos_sim = (hF * hB).sum(dim=1)
-                loss_ortho = (cos_sim ** 2).mean()
-
-                # 相似性损失
-                h0 = h.clone()
-                h0[:, data.sen_idx] = 0
-
-                h1 = h.clone()
-                h1[:, data.sen_idx] = 1
-                batch_size = h1.shape[0]
-                z1 = F.normalize(h0)
-                z2 = F.normalize(h1)
-                sim = torch.mm(z1, z2.t()) / 0.5  # [batch_size, batch_size]
-
-                # 构造正样本的相似度向量（对角线）
-                pos_sim = sim.diag().view(batch_size, 1)  # [batch_size, 1]
-
-                denom = torch.logsumexp(sim, dim=1, keepdim=True)  # [batch_size, 1]
-
-                # 每个锚点的损失： - (正样本的相似度 - 分母)
-                loss_i = - (pos_sim - denom).mean()
-
-                # 对称地，从z2到z1
-                denom_j = torch.logsumexp(sim.t(), dim=1, keepdim=True)
-                loss_j = - (pos_sim - denom_j).mean()  # 注意，这里正样本的相似度还是对角线，但转置后对角线不变
-
-                # 或者，也可以重新计算以z2为锚点的正样本，但注意，正样本还是对角线，所以可以直接用sim.t().diag()
-                # 但这里我们直接使用对称性，用同样的pos_sim（因为对角线不变）
-
-                loss_similar = (loss_i + loss_j) / 2
-
-                #loss = (0.5 * task_loss + 0.2 * loss_ortho ) / (task_loss + loss_ortho )
-                # if args.inid == '_B2':
-                #     loss = (0.3*task_loss + 0.2 * loss_ortho + 0.5 * loss_similar)/(task_loss + loss_ortho + loss_similar)
-                # else: #if args.inid == '_B1':
-                loss = (0.5*task_loss + 0.2 * loss_ortho + 0.3 * loss_similar)/(task_loss + loss_ortho + loss_similar) # C2-4 :424
-                loss.backward()
-                optimizer_C.step()
-                optimizer_F.step()
-                optimizer_B.step()
-                optimizer_E.step()
+        '''   训练分类器'''
+        encoder.eval()
+        MLP_F.train()
+        classifier.train()
+        for i in range(args.class_epochs):
+            optimizer_F.zero_grad()
+            optimizer_C.zero_grad()
+            with torch.no_grad():
+                h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
+            h_F = MLP_F(h)
+            output_class = classifier(h_F)
+            loss_c = criterion(output_class, data1.new_probs[:,1].unsqueeze(1).float())
+            loss_c.backward()
+            optimizer_C.step()
+            optimizer_F.step()
 
 
 
 
 
-
-            "=====test======="
-            encoder.eval()
-            discriminator_F.eval()
-            classifier.eval()
-            MLP_F.eval()
-            MLP_B.eval()
-
-            # 评价指标初始化
-            test_acc = [0 for n in range(len(data2))]
-            best_val_tradeoff = [0 for n in range(len(data2))]
-            test_auc_roc = [0 for n in range(len(data2))]
-            test_f1 = [0 for n in range(len(data2))]
-            test_parity = [0 for n in range(len(data2))]
-            test_equality = [0 for n in range(len(data2))]
-
+        ''' 对抗训练MLP_F '''
+        discriminator_F.eval()
+        classifier.eval()
+        encoder.eval()
+        MLP_F.train()
+        for i in range(args.ad_MLP_F_epochs):
+            optimizer_F.zero_grad()
+            with torch.no_grad():
+                h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
+            h_F = MLP_F(h)
+            pred_F_adv = torch.sigmoid(discriminator_F(h_F))
+            loss_adv_F = criterion(pred_F_adv.view(-1),0.5 * torch.ones_like(pred_F_adv.view(-1)))
+            loss_adv_F.backward()
+            optimizer_F.step()
 
 
-            for i in range(len(data2)):
-                accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
-                    data2[i].x, classifier,MLP_F,encoder, data2[i], args)
+        '''训练判别器B'''
+        encoder.eval()
+        MLP_B.train()
+        discriminator_B.train()
+        for i in range(args.db_epochs):
+            optimizer_B.zero_grad()
+            optimizer_D_B.zero_grad()
+            with torch.no_grad():
+                h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
+            h_B = MLP_B(h)
+            pred_B_adv = discriminator_B(h_B)
+            loss_adv_B = criterion(pred_B_adv.view(-1), data1.x[:, data1.sen_idx])
+            loss_adv_B.backward()
+            optimizer_B.step()
+            optimizer_D_B.step()
 
 
-                if auc_rocs['val'] + F1s['val'] + accs['val'] - args.alpha * (
-                        tmp_parity['val'] + tmp_equality['val']) > best_val_tradeoff[i]:
-                    test_acc[i] = accs['test']
-                    test_auc_roc[i] = auc_rocs['test']
-                    test_f1[i] = F1s['test']
-                    test_parity[i], test_equality[i] = tmp_parity['test'], tmp_equality['test']
+        '''  异类疏远 '''
+        encoder.train()
+        MLP_F.eval()
+        MLP_B.eval()
+        classifier.train()
+        for i in range(args.align_epochs):
+            optimizer_C.zero_grad()
+            optimizer_F.zero_grad()
+            optimizer_B.zero_grad()
+            optimizer_E.zero_grad()
+            h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
 
-                    best_val_tradeoff[i] = auc_rocs['val'] + F1s['val'] + \
-                                        accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
+            # 分类损失
+            h_F = MLP_F(h)
+            h_B = MLP_B(h)
+            logits = classifier(h_F)
+            task_loss = criterion(logits, data1.new_probs[:,1].unsqueeze(1).float())
 
-            # 数据编辑训练
-            if (epoch+1)%args.de_train == 0:
-                if args.de_traintype_switch==0:
-                    data1 = train_data_edit(data1,de_a,de_x,args)  # xa单独训练
-                elif args.de_traintype_switch==1:
-                    data1 = train_data_aug(data1,data_aug,args) # xa合并训练
+            # 分离损失
+            hF = F.normalize(h_F, dim=1)
+            hB = F.normalize(h_B, dim=1)
+            cos_sim = (hF * hB).sum(dim=1)
+            loss_ortho = (cos_sim ** 2).mean()
+
+            # 相似性损失
+            h0 = h.clone()
+            h0[:, data.sen_idx] = 0
+
+            h1 = h.clone()
+            h1[:, data.sen_idx] = 1
+            batch_size = h1.shape[0]
+            z1 = F.normalize(h0)
+            z2 = F.normalize(h1)
+            sim = torch.mm(z1, z2.t()) / 0.5  # [batch_size, batch_size]
+
+            # 构造正样本的相似度向量（对角线）
+            pos_sim = sim.diag().view(batch_size, 1)  # [batch_size, 1]
+
+            denom = torch.logsumexp(sim, dim=1, keepdim=True)  # [batch_size, 1]
+
+            # 每个锚点的损失： - (正样本的相似度 - 分母)
+            loss_i = - (pos_sim - denom).mean()
+
+            # 对称地，从z2到z1
+            denom_j = torch.logsumexp(sim.t(), dim=1, keepdim=True)
+            loss_j = - (pos_sim - denom_j).mean()  # 注意，这里正样本的相似度还是对角线，但转置后对角线不变
+
+            # 或者，也可以重新计算以z2为锚点的正样本，但注意，正样本还是对角线，所以可以直接用sim.t().diag()
+            # 但这里我们直接使用对称性，用同样的pos_sim（因为对角线不变）
+
+            loss_similar = (loss_i + loss_j) / 2
+
+            #loss = (0.5 * task_loss + 0.2 * loss_ortho ) / (task_loss + loss_ortho )
+            # if args.inid == '_B2':
+            #     loss = (0.3*task_loss + 0.2 * loss_ortho + 0.5 * loss_similar)/(task_loss + loss_ortho + loss_similar)
+            # else: #if args.inid == '_B1':
+            loss = (0.5*task_loss + 0.2 * loss_ortho + 0.3 * loss_similar)/(task_loss + loss_ortho + loss_similar) # C2-4 :424
+            loss.backward()
+            optimizer_C.step()
+            optimizer_F.step()
+            optimizer_B.step()
+            optimizer_E.step()
 
 
-        for i in range(len(args.strlist)):
-            acc[count][i] = test_acc[i]
-            f1[count][i] = test_f1[i]
-            auc_roc[count][i] = test_auc_roc[i]
-            parity[count][i] = test_parity[i]
-            equality[count][i] = test_equality[i]
+
+
+
+
+        "=====test======="
+        encoder.eval()
+        discriminator_F.eval()
+        classifier.eval()
+        MLP_F.eval()
+        MLP_B.eval()
+
+        # 评价指标初始化
+        test_acc = [0 for n in range(len(data2))]
+        best_val_tradeoff = [0 for n in range(len(data2))]
+        test_auc_roc = [0 for n in range(len(data2))]
+        test_f1 = [0 for n in range(len(data2))]
+        test_parity = [0 for n in range(len(data2))]
+        test_equality = [0 for n in range(len(data2))]
+
+
+
+        for i in range(len(data2)):
+            accs, auc_rocs, F1s, tmp_parity, tmp_equality = evaluate_ged4(
+                data2[i].x, classifier,MLP_F,encoder, data2[i], args)
+
+
+            if auc_rocs['val'] + F1s['val'] + accs['val'] - args.alpha * (
+                    tmp_parity['val'] + tmp_equality['val']) > best_val_tradeoff[i]:
+                test_acc[i] = accs['test']
+                test_auc_roc[i] = auc_rocs['test']
+                test_f1[i] = F1s['test']
+                test_parity[i], test_equality[i] = tmp_parity['test'], tmp_equality['test']
+
+                best_val_tradeoff[i] = auc_rocs['val'] + F1s['val'] + \
+                                    accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
+
+        # 数据编辑训练
+        if (epoch+1)%args.de_train == 0:
+            if args.de_traintype_switch==0:
+                data1 = train_data_edit(data1,de_a,de_x,args)  # xa单独训练
+            elif args.de_traintype_switch==1:
+                data1 = train_data_aug(data1,data_aug,args) # xa合并训练
+
+
+    for i in range(len(args.strlist)):
+        acc[i] = test_acc[i]
+        f1[i] = test_f1[i]
+        auc_roc[i] = test_auc_roc[i]
+        parity[i] = test_parity[i]
+        equality[i] = test_equality[i]
 
 
 
@@ -392,21 +397,13 @@ if __name__ == '__main__':
 
     acc, f1, auc_roc, parity, equality = run(data, args, data2) # data is training data.data2 is testing data
 
-    for i in range(len(args.strlist)):
 
-        print("==========={}============".format(args.inid+args.strlist[i]))
-        print('Acc     :',['{:.5f}'.format(x)if x!=0 else "feile!!" for x in acc.T[i]])
-        print('auc_roc :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in auc_roc.T[i]])
-        print('F1      :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in f1.T[i]])
-        print('parity  :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in parity.T[i]])
-        print('equality:',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in equality.T[i]])
-    for i in range(len(args.strlist)):
-        print("==========={}============".format(args.inid+args.strlist[i]))
-        print('Acc     :{:.5f}'.format( 100*np.mean(acc.T[i])))
-        print('auc_roc :{:.5f}'.format( 100*np.mean(auc_roc.T[i])))
-        print('F1      :{:.5f}'.format( 100*np.mean(f1.T[i])))
-        print('parity  :{:.5f}'.format( 100*np.mean(parity.T[i])))
-        print('equality:{:.5f}'.format( 100*np.mean(equality.T[i])))
+    print("==========={}============".format(args.inid+args.strlist[i]))
+    print('Acc     :{:.5f}'.format( 100*acc.item()))
+    print('auc_roc :{:.5f}'.format( 100*auc_roc.item()))
+    print('F1      :{:.5f}'.format( 100*f1.item()))
+    print('parity  :{:.5f}'.format( 100*parity.item()))
+    print('equality:{:.5f}'.format( 100*equality.item()))
 
 
 
