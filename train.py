@@ -186,7 +186,7 @@ if __name__ == '__main__':
     parser.add_argument('--d_lr', type=float, help="分辨器的学习率", default=0.01)
     parser.add_argument('--c_lr', type=float, help="分类器的学习率", default=0.005)
     parser.add_argument('--e_lr', type=float, help="编码器的学习率", default=0.001)
-    parser.add_argument('--gpus', type=int, help="gpu卡号", default=0)
+    parser.add_argument('--gpu', type=int, help="gpu卡号", default=0)
 
     parser.add_argument('--epochs', type=int, help="训练轮数", default=20)
     parser.add_argument('--dic_epochs', type=int, help="鉴别器的训练轮数",default=40)
@@ -248,21 +248,21 @@ if __name__ == '__main__':
 
     acc, f1, auc_roc, parity, equality = run(data, args, data2) # data is training data.data2 is testing data
 
+    for i in range(len(args.strlist)):
 
+        print("==========={}============".format(args.inid+args.strlist[i]))
+        print('Acc     :',['{:.5f}'.format(x)if x!=0 else "feile!!" for x in acc.T[i]])
+        print('auc_roc :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in auc_roc.T[i]])
+        print('F1      :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in f1.T[i]])
+        print('parity  :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in parity.T[i]])
+        print('equality:',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in equality.T[i]])
     for i in range(len(args.strlist)):
-        print("==========={}============".format(args.outid+args.strlist[i]))
-        print('Acc: ', acc.T[i])
-        print('auc_roc: ', auc_roc.T[i])
-        print('parity: ', parity.T[i])
-        print('equality: ', equality.T[i])
-        #print('F1: ', np.mean(f1.T[i]))
-    for i in range(len(args.strlist)):
-        print("==========={}============".format(args.outid+args.strlist[i]))
-        print('Acc: ', np.mean(acc.T[i]))
-        print('auc_roc: ', np.mean(auc_roc.T[i]))
-        print('parity: ', np.mean(parity.T[i]))
-        print('equality: ', np.mean(equality.T[i]))
-        #print('F1: ', np.mean(f1.T[i]))
+        print("==========={}============".format(args.inid+args.strlist[i]))
+        print('Acc     :{:.5f}'.format( 100*np.mean(acc.T[i])))
+        print('auc_roc :{:.5f}'.format( 100*np.mean(auc_roc.T[i])))
+        print('F1      :{:.5f}'.format( 100*np.mean(f1.T[i])))
+        print('parity  :{:.5f}'.format( 100*np.mean(parity.T[i])))
+        print('equality:{:.5f}'.format( 100*np.mean(equality.T[i])))
 
 
 '''

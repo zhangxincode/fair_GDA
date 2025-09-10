@@ -1,24 +1,23 @@
 # FairGDA
 
-## source domain
+## bail dataset
+
+### source data
+#### train
 在source domain (数据集B_0)中进行训练：
 ```
-python train.py dataset='bail' inid='_B0'
-
-python train.py dataset='credit' inid='_C0'
-
+python train.py --dataset='bail' --inid='_B0' 
 ```
 
-
+#### test
 在source domain (数据集B_0)训练后进行测试：
 
 ```
-python test.py
+python test.py  --dataset='bail' --inid='_B0'
 
 ```
 result:
 ```
-(pytorch) zhangxin@zhangxindeMacBook-Pro FatraGNN-main % python test.py
 Namespace(dataset='bail', inid='_B0', outid='', dropout=0.5, top_k=10, alpha=1, runs=1, hidden=16, d_lr=0.01, c_lr=0.005, e_lr=0.001, gpus=0, epochs=20, dic_epochs=40, cla_epochs=40, g_epochs=10, encoder='GCN', prop='scatter', strlist=None, device=device(type='cpu'))
 ===========_B1============
 Acc     :72.74368
@@ -47,9 +46,12 @@ equality:8.85481
 
 ```
 
-## target domain
 
-### 在target domain (数据集B_1)中进行fine：
+
+
+### target domain
+
+#### 在target domain (数据集B_1)中进行fine：
 
 ```
 python data_aug.py --inid='_B1' --seed=27
@@ -77,7 +79,7 @@ equality:1.13552
 
 
 
-### 在target domain (数据集B_2)中进行fine：
+#### 在target domain (数据集B_2)中进行fine：
 ```
 python data_aug.py --inid='_B2' --seed=73
 ```
@@ -117,7 +119,7 @@ equality:1.79616
 
 ```
 
-### 在target domain (数据集B_3)中进行fine：
+#### 在target domain (数据集B_3)中进行fine：
 ```
 python data_aug.py --inid='_B3' --seed=46
 ```
@@ -140,7 +142,7 @@ equality:1.41828
 ```
 
 
-### 在target domain (数据集B_4)中进行fine：
+#### 在target domain (数据集B_4)中进行fine：
 ```
 python data_aug.py --inid='_B4' --seed=27
 ```
@@ -161,6 +163,160 @@ F1      :51.22254
 parity  :0.85540
 equality:4.42471
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## credit dataset
+### source data
+#### train
+在source domain (数据集C_0)中进行训练：
+```
+python train.py --dataset='credit' --inid='_C0' --seed=59
+
+```
+
+#### test
+在source domain (数据集C_0)训练后进行测试：
+
+```
+python test.py  --dataset='credit' --inid='_C0'
+
+```
+result:
+```
+Namespace(dataset='credit', inid='_C0', outid='', dropout=0.5, top_k=10, alpha=1, runs=1, hidden=16, d_lr=0.01, c_lr=0.005, e_lr=0.001, gpu=0, epochs=20, dic_epochs=40, cla_epochs=40, g_epochs=10, encoder='GCN', prop='scatter', strlist=None, device=device(type='cuda', index=0))
+===========_C1============
+Acc     :77.18332
+auc_roc :66.99561
+F1      :86.92516
+parity  :5.69499
+equality:1.24489
+===========_C2============
+Acc     :68.14113
+auc_roc :67.21926
+F1      :77.86315
+parity  :1.99651
+equality:18.62567
+===========_C3============
+Acc     :71.17988
+auc_roc :68.45576
+F1      :80.47182
+parity  :0.95210
+equality:16.03343
+===========_C4============
+Acc     :69.53216
+auc_roc :69.95697
+F1      :77.93308
+parity  :5.77804
+equality:16.94596
+```
+
+### target domain
+
+
+
+
+#### 在target domain (数据集C_1)中进行fine：
+```
+python data_aug.py --dataset='credit' --inid='_C1' --seed=40 --runs=1
+```
+result:
+```
+Namespace(dataset='credit', inid='_C1', runs=1, encoder='GCN', prop='scatter', hidden=16, seed=40, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.001, discri_B_lr=0.001, classify_lr=0.001, encoder_lr=0.001, de_feature_lr=0.001, de_edge_lr=0.001, epochs=10, df_epochs=30, db_epochs=30, class_epochs=30, ad_MLP_F_epochs=5, align_epochs=5, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=3, de_separate_node_epochs=2, de_separate_edge_epochs=2, strlist=None, device=device(type='cuda', index=0))
+===========_C1_C1============
+Acc     : ['0.77026']
+auc_roc : ['0.67616']
+F1      : ['0.87011']
+parity  : ['0.00182']
+equality: ['0.00176']
+===========_C1_C1============
+Acc     :77.02596
+auc_roc :67.61635
+F1      :87.01068
+parity  :0.18248
+equality:0.17620
+```
+
+
+#### 在target domain (数据集C_2)中进行fine：
+```
+python data_aug.py --dataset='credit' --inid='_C2' --seed=29 --runs=1
+```
+result:
+```
+Namespace(dataset='credit', inid='_C2', runs=1, encoder='GCN', prop='scatter', hidden=16, seed=29, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.001, discri_B_lr=0.001, classify_lr=0.001, encoder_lr=0.001, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=50, db_epochs=50, class_epochs=30, ad_MLP_F_epochs=100, align_epochs=100, de_traintype_switch=0, de_train=5, de_together_epochs=30, de_separate_epochs=5, de_separate_node_epochs=5, de_separate_edge_epochs=2, strlist=None, device=device(type='cuda', index=0))
+===========_C2_C2============
+Acc     : ['0.76883']
+auc_roc : ['0.66206']
+F1      : ['0.86234']
+parity  : ['0.00980']
+equality: ['0.10175']
+===========_C2_C2============
+Acc     :76.88257
+auc_roc :66.20631
+F1      :86.23393
+parity  :0.97976
+equality:10.17505
+```
+
+#### 在target domain (数据集C_3)中进行fine：
+```
+python data_aug.py --dataset='credit' --inid='_C3' --seed=32 --runs=1
+```
+result:
+```
+(fairGTA) PS C:\Users\91203\PycharmProjects\FairGDA> python data_aug.py --dataset='credit' --inid='_C3' --seed=32 --runs=1
+Namespace(dataset='credit', inid='_C3', runs=1, encoder='GCN', prop='scatter', hidden=16, seed=32, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.001, discri_B_lr=0.001, classify_lr=0.001, encoder_lr=0.001, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=50, db_epochs=50, class_epochs=30, ad_MLP_F_epochs=100, align_epochs=100, de_traintype_switch=0, de_train=5, de_together_epochs=30, de_separate_epochs=5, de_separate_node_epochs=5, de_separate_edge_epochs=2, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['0.72534']
+auc_roc : ['0.68674']
+F1      : ['0.82662']
+parity  : ['0.00752']
+equality: ['0.10486']
+===========_C3_C3============
+Acc     :72.53385
+auc_roc :68.67445
+F1      :82.66178
+parity  :0.75211
+equality:10.48632
+
+
+```
+
+
+#### 在target domain (数据集C_4)中进行fine：
+```
+python data_aug.py --dataset='credit' --inid='_C4' --seed=26 --runs=1
+```
+result:
+```
+(fairGTA) PS C:\Users\91203\PycharmProjects\FairGDA> python data_aug.py --dataset='credit' --inid='_C4' --seed=26 --runs=1
+Namespace(dataset='credit', inid='_C4', runs=1, encoder='GCN', prop='scatter', hidden=16, seed=26, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.001, discri_B_lr=0.001, classify_lr=0.001, encoder_lr=0.001, de_feature_lr=0.001, de_edge_lr=0.001, epochs=20, df_epochs=50, db_epochs=50, class_epochs=30, ad_MLP_F_epochs=100, align_epochs=100, de_traintype_switch=0, de_train=5, de_together_epochs=30, de_separate_epochs=5, de_separate_node_epochs=5, de_separate_edge_epochs=2, strlist=None, device=device(type='cuda', index=0))
+===========_C4_C4============
+Acc     : ['0.71287']
+auc_roc : ['0.71352']
+F1      : ['0.82294']
+parity  : ['0.00963']
+equality: ['0.04067']
+===========_C4_C4============
+Acc     :71.28655
+auc_roc :71.35207
+F1      :82.29354
+parity  :0.96336
+equality:4.06750
+```
+
 
 
 
