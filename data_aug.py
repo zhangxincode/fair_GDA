@@ -34,66 +34,67 @@ from data_edit import DE_X,DE_A,train_data_edit,train_data_aug,DataAug
 def run(data, args, data2):
     acc, f1, auc_roc, parity, equality = np.zeros([args.runs, len(data2)]), np.zeros([args.runs, len(data2)]), np.zeros(
         [args.runs, len(data2)]), np.zeros([args.runs, len(data2)]), np.zeros([args.runs, len(data2)])
+    criterion = nn.BCEWithLogitsLoss()
+    data = data.to(args.device)
+    for i in range(len(data2)):
+        data2[i] = data2[i].to(args.device)
+        data2[i].test_mask = data2[i].test_mask | data2[i].val_mask | data2[i].test_mask
+
+    t_idx_s0 = data.sens[data.train_mask] == 0
+    t_idx_s1 = data.sens[data.train_mask] == 1
+    t_idx_s0_y1 = torch.logical_and(t_idx_s0, data.y[data.train_mask] == 1)
+    t_idx_s1_y1 = torch.logical_and(t_idx_s1, data.y[data.train_mask] == 1)
+    t_idx_s0_y0 = torch.logical_and(t_idx_s0, data.y[data.train_mask] == 0)
+    t_idx_s1_y0 = torch.logical_and(t_idx_s1, data.y[data.train_mask] == 0)
+    t_num_s0_y1, t_num_s1_y1, t_num_s0_y0, t_num_s1_y0, = sum(t_idx_s0_y1), sum(t_idx_s1_y1), sum(t_idx_s0_y0), sum(
+        t_idx_s1_y0),
+
+    idx_s0 = data.sens == 0
+    idx_s1 = data.sens == 1
+    idx_s0_y1 = torch.logical_and(idx_s0, data.y == 1)
+    idx_s1_y1 = torch.logical_and(idx_s1, data.y == 1)
+    idx_s0_y0 = torch.logical_and(idx_s0, data.y == 0)
+    idx_s1_y0 = torch.logical_and(idx_s1, data.y == 0)
+    num_s0_y1, num_s1_y1, num_s0_y0, num_s1_y0, = sum(idx_s0_y1), sum(idx_s1_y1), sum(idx_s0_y0), sum(idx_s1_y0),
+
+    eweight = torch.ones(data.edge_index.shape[1]).to(data.x.device)
+    adj = torch.sparse_coo_tensor(data.edge_index, eweight, [data.x.shape[0], data.x.shape[0]])
+    A2 = torch.spmm(adj, adj)
+
+    MLP_F = MLP_net(args).to(args.device)
+    optimizer_F = torch.optim.Adam(params=MLP_F.parameters(), lr=args.fairnet_lr)
+
+    MLP_B = MLP_net(args).to(args.device)
+    optimizer_B = torch.optim.Adam(params=MLP_B.parameters(), lr=args.baisnet_lr)
+
+    discriminator_F = MLP_discriminator(args).to(args.device)
+    optimizer_D_F = torch.optim.Adam(params=discriminator_F.parameters(), lr=args.discri_F_lr)
+
+    discriminator_B = MLP_discriminator(args).to(args.device)
+    optimizer_D_B = torch.optim.Adam(params=discriminator_B.parameters(), lr=args.discri_B_lr)
+    # 注意这的文件地址
+    if args.dataset == 'bail':
+        train_name = "_B0"
+    elif args.dataset == "credit":
+        train_name = "_C0"
+    elif args.dataset == 'pokec':
+        train_name = "_z"
+    classifier = torch.load('./model_para/{}/{}_classifier_best_0.pth'.format(args.dataset, train_name),
+                            weights_only=False).to(args.device)  # ,map_location='cpu'
+    optimizer_C = torch.optim.Adam(params=classifier.parameters(), lr=args.classify_lr)
+
+    encoder = torch.load('./model_para/{}/{}_encoder_best_0.pth'.format(args.dataset, train_name),
+                         weights_only=False).to(args.device)
+    optimizer_E = torch.optim.Adam(params=encoder.parameters(), lr=args.encoder_lr)
+
+    data3 = data.clone()
+    data_aug = DataAug(classifier, encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1], args)
+    de_a = DE_A(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1], args)
+    de_x = DE_X(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1], args)
+    data1 = update_labels_by_neighbors_with_predictions(data3, encoder, classifier)
+
     '==========train============='
     for count in range(args.runs):
-        criterion = nn.BCEWithLogitsLoss()
-        data = data.to(args.device)
-        for i in range(len(data2)):
-            data2[i] = data2[i].to(args.device)
-            data2[i].test_mask = data2[i].test_mask | data2[i].val_mask | data2[i].test_mask
-
-        t_idx_s0 = data.sens[data.train_mask] == 0
-        t_idx_s1 = data.sens[data.train_mask] == 1
-        t_idx_s0_y1 = torch.logical_and(t_idx_s0, data.y[data.train_mask] == 1)
-        t_idx_s1_y1 = torch.logical_and(t_idx_s1, data.y[data.train_mask] == 1)
-        t_idx_s0_y0 = torch.logical_and(t_idx_s0, data.y[data.train_mask] == 0)
-        t_idx_s1_y0 = torch.logical_and(t_idx_s1, data.y[data.train_mask] == 0)
-        t_num_s0_y1, t_num_s1_y1, t_num_s0_y0, t_num_s1_y0, = sum(t_idx_s0_y1), sum(t_idx_s1_y1), sum(t_idx_s0_y0), sum(
-            t_idx_s1_y0),
-
-        idx_s0 = data.sens == 0
-        idx_s1 = data.sens == 1
-        idx_s0_y1 = torch.logical_and(idx_s0, data.y == 1)
-        idx_s1_y1 = torch.logical_and(idx_s1, data.y == 1)
-        idx_s0_y0 = torch.logical_and(idx_s0, data.y == 0)
-        idx_s1_y0 = torch.logical_and(idx_s1, data.y == 0)
-        num_s0_y1, num_s1_y1, num_s0_y0, num_s1_y0, = sum(idx_s0_y1), sum(idx_s1_y1), sum(idx_s0_y0), sum(idx_s1_y0),
-
-        eweight = torch.ones(data.edge_index.shape[1]).to(data.x.device)
-        adj = torch.sparse_coo_tensor(data.edge_index, eweight, [data.x.shape[0], data.x.shape[0]])
-        A2 = torch.spmm(adj, adj)
-
-        MLP_F = MLP_net(args).to(args.device)
-        optimizer_F = torch.optim.Adam(params=MLP_F.parameters(), lr=args.fairnet_lr)
-
-        MLP_B = MLP_net(args).to(args.device)
-        optimizer_B = torch.optim.Adam(params=MLP_B.parameters(), lr=args.baisnet_lr)
-
-        discriminator_F = MLP_discriminator(args).to(args.device)
-        optimizer_D_F = torch.optim.Adam(params=discriminator_F.parameters(), lr=args.discri_F_lr)
-
-        discriminator_B = MLP_discriminator(args).to(args.device)
-        optimizer_D_B = torch.optim.Adam(params=discriminator_B.parameters(), lr=args.discri_B_lr)
-        # 注意这的文件地址
-        if args.dataset == 'bail':
-            train_name = "_B0"
-        elif args.dataset == "credit":
-            train_name = "_C0"
-        elif args.dataset == 'pokec':
-            train_name = "_z"
-        classifier = torch.load('./model_para/{}/{}_classifier_best_0.pth'.format(args.dataset, train_name),
-                                weights_only=False).to(args.device)  # ,map_location='cpu'
-        optimizer_C = torch.optim.Adam(params=classifier.parameters(), lr=args.classify_lr)
-
-        encoder = torch.load('./model_para/{}/{}_encoder_best_0.pth'.format(args.dataset, train_name),
-                             weights_only=False).to(args.device)
-        optimizer_E = torch.optim.Adam(params=encoder.parameters(), lr=args.encoder_lr)
-
-        data3 = data.clone()
-        data_aug = DataAug(classifier, encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1], args)
-        de_a = DE_A(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1], args)
-        de_x = DE_X(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1], args)
-        data1 = update_labels_by_neighbors_with_predictions(data3, encoder, classifier)
         seed_everything(args.seed+count)
         discriminator_B.reset_parameters()
         discriminator_F.reset_parameters()
@@ -238,7 +239,6 @@ def run(data, args, data2):
                 optimizer_F.step()
                 optimizer_B.step()
                 optimizer_E.step()
-
 
 
 
