@@ -316,7 +316,7 @@ def load_german(dataset, sens_attr="Gender", predict_attr="GoodCustomer", path="
     return adj_norm_sp, edge_index, features, labels, train_mask, val_mask, test_mask, sens
 
 
-def load_pokec(dataset, sens_attr, predict_attr, path="dataset/pokec/", label_number=1000, sens_number=500, seed=19,
+def load_pokec(dataset, sens_attr, predict_attr, path="dataset/model_para_pokec/", label_number=1000, sens_number=500, seed=19,
                test_idx=False):
     """Load data"""
     print('Loading {} dataset from {}'.format(dataset, path))
@@ -398,20 +398,27 @@ def get_dataset(dataname, inid, top_k):
         adj_norm_sp, edge_index, features, labels, train_mask, val_mask, test_mask, sens = load(
             dataset=dataname+inid, label_number=label_num)
 
-    elif(dataname == 'pokec'):
+    elif(dataname == 'model_para_pokec'):
         adj_norm_sp, edge_index, features, labels, train_mask, val_mask, test_mask, sens = load_pokec(dataset='region_job'+inid,
-                                                                                                                      sens_attr="region",
-                                                                                                                      predict_attr="I_am_working_in_field",
-                                                                                                                      path="dataset/pokec/",
-                                                                                                                      label_number=500,
-                                                                                                                      sens_number=200,
-                                                                                                                      seed=20,
-                                                                                                                      test_idx=False)
-    # elif (dataname == 'pokec'):
+                                                                                                      sens_attr="region",
+                                                                                                      predict_attr="I_am_working_in_field",
+                                                                                                      path="rubish/pokec/",
+                                                                                                      label_number=500,
+                                                                                                      sens_number=200,
+                                                                                                      seed=20,
+                                                                                                      test_idx=False)
+    elif(dataname == 'german'):
+        adj_norm_sp, edge_index, features, labels, train_mask, val_mask, test_mask, sens = load_german(
+            dataset=dataname + inid,
+            sens_attr="Gender",
+            predict_attr="GoodCustomer",
+            path="dataset/german/",
+            )
+    # elif (dataname == 'model_para_pokec'):
     #     adj_norm_sp, edge_index, features, labels, train_mask, val_mask, test_mask, sens, idx_sens_train = load_pokec(dataset='region_job_2',
     #                                                                                            sens_attr="region",
     #                                                                                            predict_attr="I_am_working_in_field",
-    #                                                                                            path="../dataset/pokec/",
+    #                                                                                            path="../dataset/model_para_pokec/",
     #                                                                                            label_number=500,
     #                                                                                            sens_number=200,
     #                                                                                            seed=20,
@@ -421,8 +428,10 @@ def get_dataset(dataname, inid, top_k):
         sens_idx = 1
     elif(dataname == 'bail'):
         sens_idx = 1
-    elif (dataname == 'pokec'):
+    elif (dataname == 'model_para_pokec'):
         sens_idx = 3
+    elif(dataname == 'german'):
+        sens_idx = 0
 
 
     x_max, x_min = torch.max(features, dim=0)[0], torch.min(features, dim=0)[0]

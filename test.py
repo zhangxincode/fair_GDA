@@ -28,10 +28,18 @@ def run(data, args, data2):
         data2[i] = data2[i].to(args.device)
         data2[i].test_mask = data2[i].test_mask | data2[i].val_mask | data2[i].test_mask
 
-    classifier = torch.load('./model_para/classifier_best_0.pth', weights_only=False).to(args.device)
 
+    if args.dataset == 'bail':
+        train_name = "_B0"
+    elif args.dataset == "credit":
+        train_name = "_C0"
+    elif args.dataset == 'model_para_pokec':
+        train_name = "_z"
+    classifier = torch.load('./model_para/{}/{}_classifier_best_0.pth'.format(args.dataset, train_name),
+                            weights_only=False).to(args.device)  # ,map_location='cpu'
 
-    encoder = torch.load('./model_para/encoder_best_0.pth', weights_only=False).to(args.device)
+    encoder = torch.load('./model_para/{}/{}_encoder_best_0.pth'.format(args.dataset, train_name),
+                         weights_only=False).to(args.device)
 
     t_idx_s0 = data.sens[data.train_mask] == 0
     t_idx_s1 = data.sens[data.train_mask] == 1
@@ -107,7 +115,7 @@ if __name__ == '__main__':
     parser.add_argument('--d_lr', type=float, help="分辨器的学习率", default=0.01)
     parser.add_argument('--c_lr', type=float, help="分类器的学习率", default=0.005)
     parser.add_argument('--e_lr', type=float, help="编码器的学习率", default=0.001)
-    parser.add_argument('--gpus', type=int, help="gpu卡号", default=0)
+    parser.add_argument('--gpu', type=int, help="gpu卡号", default=0)
 
     parser.add_argument('--epochs', type=int, help="训练轮数", default=20)
     parser.add_argument('--dic_epochs', type=int, help="鉴别器的训练轮数",default=40)
@@ -140,7 +148,7 @@ if __name__ == '__main__':
             datatmp, _, _, _, _, _ = get_dataset(
                 args.dataset,  args.strlist[i], args.top_k)
             data2.append(datatmp)
-    elif args.dataset == "pokec":
+    elif args.dataset == "model_para_pokec":
         args.strlist = ['_z', '_n',]
         args.inidIndex = args.strlist.index(args.inid)
         for i in range(len(args.strlist)):
@@ -152,7 +160,7 @@ if __name__ == '__main__':
             data2.append(datatmp)
 
     args.num_features, args.num_classes = data.x.shape[1], len(data.y.unique()) - 1
-    if args.dataset == "pokec":
+    if args.dataset == "model_para_pokec":
         args.num_classes = 1
     args.train_ratio, args.val_ratio = torch.tensor(
         [(data.y[data.train_mask] == 0).sum(), (data.y[data.train_mask] == 1).sum()]), \
