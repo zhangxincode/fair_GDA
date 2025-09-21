@@ -407,6 +407,13 @@ def get_dataset(dataname, inid, top_k):
                                                                                                                       sens_number=200,
                                                                                                                       seed=20,
                                                                                                                       test_idx=False)
+    elif(dataname == 'german'):
+        adj_norm_sp, edge_index, features, labels, train_mask, val_mask, test_mask, sens = load_german(
+            dataset=dataname + inid,
+            sens_attr="Gender",
+            predict_attr="GoodCustomer",
+            path="dataset/german/",
+            )
     # elif (dataname == 'pokec'):
     #     adj_norm_sp, edge_index, features, labels, train_mask, val_mask, test_mask, sens, idx_sens_train = load_pokec(dataset='region_job_2',
     #                                                                                            sens_attr="region",
@@ -423,6 +430,8 @@ def get_dataset(dataname, inid, top_k):
         sens_idx = 1
     elif (dataname == 'pokec'):
         sens_idx = 3
+    elif(dataname == 'german'):
+        sens_idx = 0
 
 
     x_max, x_min = torch.max(features, dim=0)[0], torch.min(features, dim=0)[0]

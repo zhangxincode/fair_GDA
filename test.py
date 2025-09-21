@@ -28,10 +28,18 @@ def run(data, args, data2):
         data2[i] = data2[i].to(args.device)
         data2[i].test_mask = data2[i].test_mask | data2[i].val_mask | data2[i].test_mask
 
-    classifier = torch.load('./model_para/classifier_best_0.pth', weights_only=False).to(args.device)
 
+    if args.dataset == 'bail':
+        train_name = "_B0"
+    elif args.dataset == "credit":
+        train_name = "_C0"
+    elif args.dataset == 'pokec':
+        train_name = "_z"
+    classifier = torch.load('./model_para/{}/{}_classifier_best_0.pth'.format(args.dataset, train_name),
+                            weights_only=False).to(args.device)  # ,map_location='cpu'
 
-    encoder = torch.load('./model_para/encoder_best_0.pth', weights_only=False).to(args.device)
+    encoder = torch.load('./model_para/{}/{}_encoder_best_0.pth'.format(args.dataset, train_name),
+                         weights_only=False).to(args.device)
 
     t_idx_s0 = data.sens[data.train_mask] == 0
     t_idx_s1 = data.sens[data.train_mask] == 1

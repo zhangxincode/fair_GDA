@@ -3,6 +3,8 @@
 对于标签平滑，使用的是标签平滑正则化，即对标签进行平滑处理，使标签分布更加均匀，避免模型过拟合。
 对于模型调整，使用的是解纠缠表示学习，即通过解纠缠表示学习，使模型的表示能力更强，从而提高模型的性能。
 使用 将数据编辑中的相似性计算融入模型损失计算之中
+
+对应的seed是一致的
 '''
 
 
@@ -34,6 +36,7 @@ from data_edit import DE_X,DE_A,train_data_edit,train_data_aug,DataAug
 def run(data, args, data2):
     acc, f1, auc_roc, parity, equality = np.zeros([args.runs, len(data2)]), np.zeros([args.runs, len(data2)]), np.zeros(
         [args.runs, len(data2)]), np.zeros([args.runs, len(data2)]), np.zeros([args.runs, len(data2)])
+
     criterion = nn.BCEWithLogitsLoss()
     data = data.to(args.device)
     for i in range(len(data2)):
@@ -60,49 +63,47 @@ def run(data, args, data2):
     eweight = torch.ones(data.edge_index.shape[1]).to(data.x.device)
     adj = torch.sparse_coo_tensor(data.edge_index, eweight, [data.x.shape[0], data.x.shape[0]])
     A2 = torch.spmm(adj, adj)
-
-    MLP_F = MLP_net(args).to(args.device)
-    optimizer_F = torch.optim.Adam(params=MLP_F.parameters(), lr=args.fairnet_lr)
-
-    MLP_B = MLP_net(args).to(args.device)
-    optimizer_B = torch.optim.Adam(params=MLP_B.parameters(), lr=args.baisnet_lr)
-
-    discriminator_F = MLP_discriminator(args).to(args.device)
-    optimizer_D_F = torch.optim.Adam(params=discriminator_F.parameters(), lr=args.discri_F_lr)
-
-    discriminator_B = MLP_discriminator(args).to(args.device)
-    optimizer_D_B = torch.optim.Adam(params=discriminator_B.parameters(), lr=args.discri_B_lr)
-    # 注意这的文件地址
-    if args.dataset == 'bail':
-        train_name = "_B0"
-    elif args.dataset == "credit":
-        train_name = "_C0"
-    elif args.dataset == 'pokec':
-        train_name = "_z"
-    classifier = torch.load('./model_para/{}/{}_classifier_best_0.pth'.format(args.dataset, train_name),
-                            weights_only=False).to(args.device)  # ,map_location='cpu'
-    optimizer_C = torch.optim.Adam(params=classifier.parameters(), lr=args.classify_lr)
-
-    encoder = torch.load('./model_para/{}/{}_encoder_best_0.pth'.format(args.dataset, train_name),
-                         weights_only=False).to(args.device)
-    optimizer_E = torch.optim.Adam(params=encoder.parameters(), lr=args.encoder_lr)
-
-    data3 = data.clone()
-    data_aug = DataAug(classifier, encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1], args)
-    de_a = DE_A(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1], args)
-    de_x = DE_X(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1], args)
-    data1 = update_labels_by_neighbors_with_predictions(data3, encoder, classifier)
-
     '==========train============='
     for count in range(args.runs):
-        seed_everything(args.seed+count)
+        MLP_F = MLP_net(args).to(args.device)
+        optimizer_F = torch.optim.Adam(params=MLP_F.parameters(), lr=args.fairnet_lr)
+
+        MLP_B = MLP_net(args).to(args.device)
+        optimizer_B = torch.optim.Adam(params=MLP_B.parameters(), lr=args.baisnet_lr)
+
+        discriminator_F = MLP_discriminator(args).to(args.device)
+        optimizer_D_F = torch.optim.Adam(params=discriminator_F.parameters(), lr=args.discri_F_lr)
+
+        discriminator_B = MLP_discriminator(args).to(args.device)
+        optimizer_D_B = torch.optim.Adam(params=discriminator_B.parameters(), lr=args.discri_B_lr)
+        # 注意这的文件地址
+        if args.dataset == 'bail':
+            train_name = "_B0"
+        elif args.dataset == "credit":
+            train_name = "_C0"
+        elif args.dataset == 'pokec':
+            train_name = "_z"
+
+        classifier = torch.load('./model_para/{}/{}_classifier_best_0.pth'.format(args.dataset, train_name),
+                                weights_only=False).to(args.device)  # ,map_location='cpu'
+        optimizer_C = torch.optim.Adam(params=classifier.parameters(), lr=args.classify_lr)
+
+        encoder = torch.load('./model_para/{}/{}_encoder_best_0.pth'.format(args.dataset, train_name),
+                             weights_only=False).to(args.device)
+        optimizer_E = torch.optim.Adam(params=encoder.parameters(), lr=args.encoder_lr)
+        data3 = data.clone()
+        data_aug = DataAug(classifier, encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1], args)
+        de_a = DE_A(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1], args)
+        de_x = DE_X(encoder, data3.x.shape[0], data3.x.shape[1], data3.edge_index.shape[1], args)
+        data1 = update_labels_by_neighbors_with_predictions(data3, encoder, classifier)
+
+        seed_everything(args.seed + count)
         discriminator_B.reset_parameters()
         discriminator_F.reset_parameters()
         classifier.reset_parameters()
         encoder.reset_parameters()
         MLP_F.reset_parameters()
         MLP_B.reset_parameters()
-
         for epoch in range(args.epochs):
             ''' 训练判别器F'''
             encoder.eval()
@@ -241,9 +242,6 @@ def run(data, args, data2):
                 optimizer_E.step()
 
 
-
-
-
             "=====test======="
             encoder.eval()
             discriminator_F.eval()
@@ -299,7 +297,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str,help="数据集种类",default='bail')#german
     parser.add_argument('--inid', type=str, help="作为输入的数据集",default='_B1')
-    parser.add_argument('--runs', type=int, help="运行次数",default=5) # 5
+    parser.add_argument('--runs', type=int, help="运行次数",default=1) # 5
 
     parser.add_argument('--encoder', type=str,help="编码器encoder种类", default='GCN')
     parser.add_argument('--prop', type=str, help="CCN的选择",default='scatter')
@@ -325,7 +323,7 @@ if __name__ == '__main__':
     parser.add_argument('--de_edge_lr', type=float, help="数据编辑边特征训练的学习率 ", default=0.001)
 
     # 训练轮数参数调整
-    parser.add_argument('--epochs', type=int, help="整体模型微调的总轮数", default=15)
+    parser.add_argument('--epochs', type=int, help="整体模型微调的总轮数", default=20)
     parser.add_argument('--df_epochs', type=int, help="判别器F微调的总轮数", default=20)
     parser.add_argument('--db_epochs', type=int, help="判别器B微调的总轮数", default=20)
     parser.add_argument('--class_epochs', type=int, help="训练分类器微调的总轮数", default=40)
@@ -335,11 +333,12 @@ if __name__ == '__main__':
 
     # 数据编辑的相关参数
 
-    parser.add_argument('--de_train', type=int, help="数据编辑每几个epoch进行一次训练", default=5)
-    parser.add_argument('--de_traintype_switch', type=int, help="是采用结点特征和边共同训练(1)，还是分离训练开关(0)。",
+    parser.add_argument('--de_train', type=int, help="数据编辑每几个epoch进行一次训练", default=4)
+    parser.add_argument('--de_traintype_switch', type=int, help="是采用结点特征和边共同训练(1)，还是分离训练开关(0)",
                         default=0)
     parser.add_argument('--de_together_epochs', type=int, help="数据编辑中共同训练的总轮数", default=5)
-    parser.add_argument('--de_separate_epochs', type=int, help="数据编辑中分离训练的总轮数", default=3)
+
+    parser.add_argument('--de_separate_epochs', type=int, help="数据编辑中分离训练的总轮数", default=5)
     parser.add_argument('--de_separate_node_epochs', type=int, help="数据编辑中分离训练中结点特征的总轮数", default=5)
     parser.add_argument('--de_separate_edge_epochs', type=int, help="数据编辑中分离训练中边的权重特征的总轮数",
                         default=5)
@@ -400,11 +399,11 @@ if __name__ == '__main__':
     for i in range(len(args.strlist)):
 
         print("==========={}============".format(args.inid+args.strlist[i]))
-        print('Acc     :',['{:.5f}'.format(x)if x!=0 else "feile!!" for x in acc.T[i]])
-        print('auc_roc :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in auc_roc.T[i]])
-        print('F1      :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in f1.T[i]])
-        print('parity  :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in parity.T[i]])
-        print('equality:',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in equality.T[i]])
+        print('Acc     :',['{:.5f}'.format(100*x)if x!=0 else "feile!!" for x in acc.T[i]])
+        print('auc_roc :',['{:.5f}'.format(100*x)if x!=0 else "feile!!"for x in auc_roc.T[i]])
+        print('F1      :',['{:.5f}'.format(100*x)if x!=0 else "feile!!"for x in f1.T[i]])
+        print('parity  :',['{:.5f}'.format(100*x)if x!=0 else "feile!!"for x in parity.T[i]])
+        print('equality:',['{:.5f}'.format(100*x)if x!=0 else "feile!!"for x in equality.T[i]])
     for i in range(len(args.strlist)):
         print("==========={}============".format(args.inid+args.strlist[i]))
         print('Acc     :{:.5f}'.format( 100*np.mean(acc.T[i])))

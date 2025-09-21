@@ -1,15 +1,9 @@
 from torch.nn import Linear
-import torch.nn.functional as F
 from utils import *
 from torch import nn
 from torch.nn import Parameter
-from source import GCNConv
+from rubish.source import GCNConv
 from torch_geometric.nn import GINConv, SAGEConv
-from torch.nn.utils import spectral_norm
-from scipy.sparse import coo_matrix
-from torch_geometric.nn.conv.gcn_conv import gcn_norm
-from homophily import edge_homophily, node_homophily, class_homophily, aggregation_homophily, node_homophily_abs
-
 
 
 class MLP_discriminator(torch.nn.Module):
