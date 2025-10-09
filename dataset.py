@@ -81,24 +81,6 @@ def load_credit(dataset, sens_attr="Age", predict_attr="NoDefaultNextMonth", pat
     header.remove(predict_attr)
     header.remove('Single')
 
-    # sensitive feature removal
-    # header.remove('Age')
-
-#    # Normalize MaxBillAmountOverLast6Months
-#    idx_features_labels['MaxBillAmountOverLast6Months'] = (idx_features_labels['MaxBillAmountOverLast6Months']-idx_features_labels['MaxBillAmountOverLast6Months'].mean())/idx_features_labels['MaxBillAmountOverLast6Months'].std()
-#
-#    # Normalize MaxPaymentAmountOverLast6Months
-#    idx_features_labels['MaxPaymentAmountOverLast6Months'] = (idx_features_labels['MaxPaymentAmountOverLast6Months'] - idx_features_labels['MaxPaymentAmountOverLast6Months'].mean())/idx_features_labels['MaxPaymentAmountOverLast6Months'].std()
-#
-#    # Normalize MostRecentBillAmount
-#    idx_features_labels['MostRecentBillAmount'] = (idx_features_labels['MostRecentBillAmount']-idx_features_labels['MostRecentBillAmount'].mean())/idx_features_labels['MostRecentBillAmount'].std()
-#
-#    # Normalize MostRecentPaymentAmount
-#    idx_features_labels['MostRecentPaymentAmount'] = (idx_features_labels['MostRecentPaymentAmount']-idx_features_labels['MostRecentPaymentAmount'].mean())/idx_features_labels['MostRecentPaymentAmount'].std()
-#
-#    # Normalize TotalMonthsOverdue
-#    idx_features_labels['TotalMonthsOverdue'] = (idx_features_labels['TotalMonthsOverdue']-idx_features_labels['TotalMonthsOverdue'].mean())/idx_features_labels['TotalMonthsOverdue'].std()
-
     # build relationship
     if os.path.exists(f'{path}/{dataset}_edges.txt'):
         edges_unordered = np.genfromtxt(
@@ -232,90 +214,6 @@ def load_bail(dataset, sens_attr="WHITE", predict_attr="RECID", path="dataset/ba
     return adj_norm_sp, edge_index, features, labels, train_mask, val_mask, test_mask, sens
 
 
-def load_german(dataset, sens_attr="Gender", predict_attr="GoodCustomer", path="dataset/german", label_number=1000):
-    # print('Loading {} dataset from {}'.format(dataset, path))
-    idx_features_labels = pd.read_csv(
-        os.path.join(path, "{}.csv".format(dataset)))
-    header = list(idx_features_labels.columns)
-    header.remove(predict_attr)
-    header.remove('OtherLoansAtStore')
-    header.remove('PurposeOfLoan')
-
-    # Sensitive Attribute
-    idx_features_labels['Gender'][idx_features_labels['Gender']
-                                  == 'Female'] = 1
-    idx_features_labels['Gender'][idx_features_labels['Gender'] == 'Male'] = 0
-
-#    for i in range(idx_features_labels['PurposeOfLoan'].unique().shape[0]):
-#        val = idx_features_labels['PurposeOfLoan'].unique()[i]
-#        idx_features_labels['PurposeOfLoan'][idx_features_labels['PurposeOfLoan'] == val] = i
-
-#    # Normalize LoanAmount
-#    idx_features_labels['LoanAmount'] = 2*(idx_features_labels['LoanAmount']-idx_features_labels['LoanAmount'].min()).div(idx_features_labels['LoanAmount'].max() - idx_features_labels['LoanAmount'].min()) - 1
-#
-#    # Normalize Age
-#    idx_features_labels['Age'] = 2*(idx_features_labels['Age']-idx_features_labels['Age'].min()).div(idx_features_labels['Age'].max() - idx_features_labels['Age'].min()) - 1
-#
-#    # Normalize LoanDuration
-#    idx_features_labels['LoanDuration'] = 2*(idx_features_labels['LoanDuration']-idx_features_labels['LoanDuration'].min()).div(idx_features_labels['LoanDuration'].max() - idx_features_labels['LoanDuration'].min()) - 1
-#
-    # build relationship
-    if os.path.exists(f'{path}/{dataset}_edges.txt'):
-        edges_unordered = np.genfromtxt(
-            f'{path}/{dataset}_edges.txt').astype('int')
-    else:
-        edges_unordered = build_relationship(
-            idx_features_labels[header], thresh=0.8)
-        np.savetxt(f'{path}/{dataset}_edges.txt', edges_unordered)
-
-    features = sp.csr_matrix(idx_features_labels[header], dtype=np.float32)
-    labels = idx_features_labels[predict_attr].values
-    labels[labels == -1] = 0
-
-    idx = np.arange(features.shape[0])
-    idx_map = {j: i for i, j in enumerate(idx)}
-    edges = np.array(list(map(idx_map.get, edges_unordered.flatten())),
-                     dtype=int).reshape(edges_unordered.shape)
-    adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
-                        shape=(labels.shape[0], labels.shape[0]),
-                        dtype=np.float32)
-    # build symmetric adjacency matrix
-    adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
-    adj = adj + sp.eye(adj.shape[0])
-
-    adj_norm = sys_normalized_adjacency(adj)
-    adj_norm_sp = sparse_mx_to_torch_sparse_tensor(adj_norm)
-
-    edge_index, _ = from_scipy_sparse_matrix(adj)
-
-    features = torch.FloatTensor(np.array(features.todense()))
-    labels = torch.LongTensor(labels)
-
-    # features = torch.FloatTensor(np.array(features.todense()))
-    # labels = torch.LongTensor(labels)
-
-    import random
-    random.seed(20)
-    label_idx_0 = np.where(labels == 0)[0]
-    label_idx_1 = np.where(labels == 1)[0]
-    random.shuffle(label_idx_0)
-    random.shuffle(label_idx_1)
-    idx_train = np.append(label_idx_0[:min(int(0.5 * len(label_idx_0)), label_number // 2)],
-                          label_idx_1[:min(int(0.5 * len(label_idx_1)), label_number // 2)])
-    idx_val = np.append(label_idx_0[int(0.5 * len(label_idx_0)):int(0.75 * len(
-        label_idx_0))], label_idx_1[int(0.5 * len(label_idx_1)):int(0.75 * len(label_idx_1))])
-    idx_test = np.append(label_idx_0[int(
-        0.75 * len(label_idx_0)):], label_idx_1[int(0.75 * len(label_idx_1)):])
-
-    sens = idx_features_labels[sens_attr].values.astype(int)
-    sens = torch.LongTensor(sens)
-    train_mask = index_to_mask(features.shape[0], torch.LongTensor(idx_train))
-    val_mask = index_to_mask(features.shape[0], torch.LongTensor(idx_val))
-    test_mask = index_to_mask(features.shape[0], torch.LongTensor(idx_test))
-
-    return adj_norm_sp, edge_index, features, labels, train_mask, val_mask, test_mask, sens
-
-
 def load_pokec(dataset, sens_attr, predict_attr, path="dataset/model_para_pokec/", label_number=1000, sens_number=500, seed=19,
                test_idx=False):
     """Load data"""
@@ -362,7 +260,7 @@ def load_pokec(dataset, sens_attr, predict_attr, path="dataset/model_para_pokec/
 
     import random
     random.seed(seed)
-    label_idx = np.where(labels >= 0)[0]  # 找到label有效的集合
+    label_idx = np.where(labels >= 0)[0]  
     random.shuffle(label_idx)
 
     label_idx_0 = np.where(labels == 0)[0]
@@ -414,24 +312,12 @@ def get_dataset(dataname, inid, top_k):
             predict_attr="GoodCustomer",
             path="dataset/german/",
             )
-    # elif (dataname == 'model_para_pokec'):
-    #     adj_norm_sp, edge_index, features, labels, train_mask, val_mask, test_mask, sens, idx_sens_train = load_pokec(dataset='region_job_2',
-    #                                                                                            sens_attr="region",
-    #                                                                                            predict_attr="I_am_working_in_field",
-    #                                                                                            path="../dataset/model_para_pokec/",
-    #                                                                                            label_number=500,
-    #                                                                                            sens_number=200,
-    #                                                                                            seed=20,
-    #                                                                                            test_idx=False)
+                                                                                           test_idx=False)
 
     if(dataname == 'credit' ):
         sens_idx = 1
     elif(dataname == 'bail'):
         sens_idx = 1
-    elif (dataname == 'model_para_pokec'):
-        sens_idx = 3
-    elif(dataname == 'german'):
-        sens_idx = 0
 
 
     x_max, x_min = torch.max(features, dim=0)[0], torch.min(features, dim=0)[0]

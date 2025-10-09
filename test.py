@@ -103,25 +103,25 @@ def run(data, args, data2):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, help="数据集种类", default='bail')
-    parser.add_argument('--inid', type=str, help="作为source data的训练数据", default='_B0')
-    parser.add_argument('--outid', type=str, help="作为test的数据", default='all')
-    parser.add_argument('--dropout', type=float, help="编码器encoder的dropout概率",default=0.5)
-    parser.add_argument('--top_k', type=int,help="利用superman算法算得与敏感属性前K个相似的特征",default=10)
-    parser.add_argument('--alpha', type=float, help="计算auc_rocs+F1+acc-args.alpha*(tmp_parity+tmp_equality)",default=1)
-    parser.add_argument('--runs', type=int, help="运行次数", default=1)  # 5
-    parser.add_argument('--hidden', type=int, help="编码器encoder输出特征的维度 ", default=16)
+    parser.add_argument('--dataset', type=str, help="Dataset type", default='bail')
+    parser.add_argument('--inid', type=str, help="Training data as source data", default='_B0')
+    parser.add_argument('--outid', type=str, help="Data used for testing", default='all')
+    parser.add_argument('--dropout', type=float, help="Dropout probability of encoder",default=0.5)
+    parser.add_argument('--top_k', type=int,help="Top K features similar to sensitive attributes calculated by superman algorithm",default=10)
+    parser.add_argument('--alpha', type=float, help="Calculate auc_rocs+F1+acc-args.alpha*(tmp_parity+tmp_equality)",default=1)
+    parser.add_argument('--runs', type=int, help="Number of runs", default=1)  # 5
+    parser.add_argument('--hidden', type=int, help="Dimension of encoder output features", default=16)
 
-    parser.add_argument('--d_lr', type=float, help="分辨器的学习率", default=0.01)
-    parser.add_argument('--c_lr', type=float, help="分类器的学习率", default=0.005)
-    parser.add_argument('--e_lr', type=float, help="编码器的学习率", default=0.001)
-    parser.add_argument('--gpu', type=int, help="gpu卡号", default=0)
+    parser.add_argument('--d_lr', type=float, help="Learning rate of discriminator", default=0.01)
+    parser.add_argument('--c_lr', type=float, help="Learning rate of classifier", default=0.005)
+    parser.add_argument('--e_lr', type=float, help="Learning rate of encoder", default=0.001)
+    parser.add_argument('--gpu', type=int, help="GPU card number", default=0)
 
-    parser.add_argument('--epochs', type=int, help="训练轮数", default=20)
-    parser.add_argument('--dic_epochs', type=int, help="鉴别器的训练轮数",default=40)
-    parser.add_argument('--cla_epochs', type=int, help="分类器的训练轮数",default=40)
-    parser.add_argument('--g_epochs', type=int, help="对抗网络的训练轮数",default=10)
-    parser.add_argument('--encoder', type=str, help="编码器encoder的种类",default='GCN')
+    parser.add_argument('--epochs', type=int, help="Training epochs", default=20)
+    parser.add_argument('--dic_epochs', type=int, help="Training epochs of discriminator",default=40)
+    parser.add_argument('--cla_epochs', type=int, help="Training epochs of classifier",default=40)
+    parser.add_argument('--g_epochs', type=int, help="Training epochs of adversarial network",default=10)
+    parser.add_argument('--encoder', type=str, help="Type of encoder",default='GCN')
     parser.add_argument('--prop', type=str, default='scatter')
 
 
@@ -185,15 +185,3 @@ if __name__ == '__main__':
         print('F1      :{:.5f}'.format( 100*np.mean(f1.T[i])))
         print('parity  :{:.5f}'.format( 100*np.mean(parity.T[i])))
         print('equality:{:.5f}'.format( 100*np.mean(equality.T[i])))
-
-
-    # for i in range(len(args.strlist)):
-        # print("==========={}============".format(args.outid+args.strlist[i]))
-        # print('Acc: ', np.mean(acc.T[i]))
-        # print('auc_roc: ', np.mean(auc_roc.T[i]))
-        # print('F1: ', np.mean(f1.T[i]))
-        # print('parity: ', np.mean(parity.T[i]))
-        # print('equality: ', np.mean(equality.T[i]))
-
-
-

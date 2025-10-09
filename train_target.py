@@ -1,14 +1,3 @@
-'''
-进行data edit学习的网络，
-对于标签平滑，使用的是标签平滑正则化，即对标签进行平滑处理，使标签分布更加均匀，避免模型过拟合。
-对于模型调整，使用的是解纠缠表示学习，即通过解纠缠表示学习，使模型的表示能力更强，从而提高模型的性能。
-使用 将数据编辑中的相似性计算融入模型损失计算之中
-
-对应的seed是一致的
-'''
-
-
-
 import torch
 import torch.optim as optim
 import torch.nn as nn
@@ -63,7 +52,7 @@ def run(data, args, data2):
     eweight = torch.ones(data.edge_index.shape[1]).to(data.x.device)
     adj = torch.sparse_coo_tensor(data.edge_index, eweight, [data.x.shape[0], data.x.shape[0]])
     A2 = torch.spmm(adj, adj)
-    '==========train============='
+    '==========Training============='
     for count in range(args.runs):
         MLP_F = MLP_net(args).to(args.device)
         optimizer_F = torch.optim.Adam(params=MLP_F.parameters(), lr=args.fairnet_lr)
@@ -76,7 +65,7 @@ def run(data, args, data2):
 
         discriminator_B = MLP_discriminator(args).to(args.device)
         optimizer_D_B = torch.optim.Adam(params=discriminator_B.parameters(), lr=args.discri_B_lr)
-        # 注意这的文件地址
+        # Note the file path here
         if args.dataset == 'bail':
             train_name = "_B0"
         elif args.dataset == "credit":
@@ -105,7 +94,7 @@ def run(data, args, data2):
         MLP_F.reset_parameters()
         MLP_B.reset_parameters()
         for epoch in range(args.epochs):
-            ''' 训练判别器F'''
+            ''' Train discriminator F'''
             encoder.eval()
             MLP_F.train()
             discriminator_F.train()
@@ -116,14 +105,14 @@ def run(data, args, data2):
                     h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
                 h_F = MLP_F(h)
                 pred_B = discriminator_F(h_F)
-                # 判别器的损失是两个分支损失之和
+                # The discriminator loss is the sum of two branch losses
                 loss_D = criterion(pred_B.view(-1), data1.x[:,data1.sen_idx])
                 loss_D.backward()
                 optimizer_D_F.step()
                 optimizer_F.step()
 
 
-            '''   训练分类器'''
+            '''   Train classifier'''
             encoder.eval()
             MLP_F.train()
             classifier.train()
@@ -143,7 +132,7 @@ def run(data, args, data2):
 
 
 
-            ''' 对抗训练MLP_F '''
+            ''' Adversarial training MLP_F '''
             discriminator_F.eval()
             classifier.eval()
             encoder.eval()
@@ -159,7 +148,7 @@ def run(data, args, data2):
                 optimizer_F.step()
 
 
-            '''训练判别器B'''
+            '''Train discriminator B'''
             encoder.eval()
             MLP_B.train()
             discriminator_B.train()
@@ -176,7 +165,7 @@ def run(data, args, data2):
                 optimizer_D_B.step()
 
 
-            '''  异类疏远 '''
+            '''  Alienation of different classes '''
             encoder.train()
             MLP_F.eval()
             MLP_B.eval()
@@ -188,19 +177,19 @@ def run(data, args, data2):
                 optimizer_E.zero_grad()
                 h = encoder(data1.x, data1.edge_index, data1.adj_norm_sp,data1.edge_weight)
 
-                # 分类损失
+                # Classification loss
                 h_F = MLP_F(h)
                 h_B = MLP_B(h)
                 logits = classifier(h_F)
                 task_loss = criterion(logits, data1.new_probs[:,1].unsqueeze(1).float())
 
-                # 分离损失
+                # Separation loss
                 hF = F.normalize(h_F, dim=1)
                 hB = F.normalize(h_B, dim=1)
                 cos_sim = (hF * hB).sum(dim=1)
                 loss_ortho = (cos_sim ** 2).mean()
 
-                # 相似性损失
+                # Similarity loss
                 h0 = h.clone()
                 h0[:, data.sen_idx] = 0
 
@@ -211,20 +200,19 @@ def run(data, args, data2):
                 z2 = F.normalize(h1)
                 sim = torch.mm(z1, z2.t()) / 0.5  # [batch_size, batch_size]
 
-                # 构造正样本的相似度向量（对角线）
+                # Construct positive sample similarity vector (diagonal)
                 pos_sim = sim.diag().view(batch_size, 1)  # [batch_size, 1]
 
                 denom = torch.logsumexp(sim, dim=1, keepdim=True)  # [batch_size, 1]
 
-                # 每个锚点的损失： - (正样本的相似度 - 分母)
+                # Loss for each anchor: - (positive sample similarity - denominator)
                 loss_i = - (pos_sim - denom).mean()
 
-                # 对称地，从z2到z1
+                # Symmetrically, from z2 to z1
                 denom_j = torch.logsumexp(sim.t(), dim=1, keepdim=True)
-                loss_j = - (pos_sim - denom_j).mean()  # 注意，这里正样本的相似度还是对角线，但转置后对角线不变
+                loss_j = - (pos_sim - denom_j).mean()  # Note, positive sample similarity is still diagonal here, but remains unchanged after transpose
 
-                # 或者，也可以重新计算以z2为锚点的正样本，但注意，正样本还是对角线，所以可以直接用sim.t().diag()
-                # 但这里我们直接使用对称性，用同样的pos_sim（因为对角线不变）
+                # Or, recalculate positive samples with z2 as anchor, but note that positive samples are still diagonal, so pos_sim can be used directly
 
                 loss_similar = (loss_i + loss_j) / 2
 
@@ -242,14 +230,14 @@ def run(data, args, data2):
                 optimizer_E.step()
 
 
-            "=====test======="
+            "=====Testing======="
             encoder.eval()
             discriminator_F.eval()
             classifier.eval()
             MLP_F.eval()
             MLP_B.eval()
 
-            # 评价指标初始化
+            # Evaluation metrics initialization
             test_acc = [0 for n in range(len(data2))]
             best_val_tradeoff = [0 for n in range(len(data2))]
             test_auc_roc = [0 for n in range(len(data2))]
@@ -274,12 +262,12 @@ def run(data, args, data2):
                     best_val_tradeoff[i] = auc_rocs['val'] + F1s['val'] + \
                                         accs['val'] - (tmp_parity['val'] + tmp_equality['val'])
 
-            # 数据编辑训练
+            # Data editing training
             if (epoch+1)%args.de_train == 0:
                 if args.de_traintype_switch==0:
-                    data1 = train_data_edit(data1,de_a,de_x,args)  # xa单独训练
+                    data1 = train_data_edit(data1,de_a,de_x,args)  # xa separate training
                 elif args.de_traintype_switch==1:
-                    data1 = train_data_aug(data1,data_aug,args) # xa合并训练
+                    data1 = train_data_aug(data1,data_aug,args) # xa combined training
 
 
         for i in range(len(args.strlist)):
@@ -295,58 +283,56 @@ def run(data, args, data2):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-<<<<<<<< HEAD:train_target.py
-    parser.add_argument('--dataset', type=str,help="数据集种类",default='bail')#german
-    parser.add_argument('--inid', type=str, help="作为输入的数据集",default='_B1')
-    parser.add_argument('--runs', type=int, help="运行次数",default=1) # 5
-========
-    parser.add_argument('--dataset', type=str,help="数据集种类",default='german')#german
-    parser.add_argument('--inid', type=str, help="作为输入的数据集",default='')
-    parser.add_argument('--runs', type=int, help="运行次数",default=5) # 5
->>>>>>>> origin/main:rubish/data_aug.py
 
-    parser.add_argument('--encoder', type=str,help="编码器encoder种类", default='GCN')
-    parser.add_argument('--prop', type=str, help="CCN的选择",default='scatter')
+    parser.add_argument('--dataset', type=str,help="Dataset type",default='bail')#german
+    parser.add_argument('--inid', type=str, help="Input dataset",default='_B1')
+    parser.add_argument('--runs', type=int, help="Number of runs",default=1) # 5
 
-    parser.add_argument('--hidden', type=int,help="编码器encoder输出特征的维度 ", default=16)
+    parser.add_argument('--dataset', type=str,help="Dataset type",default='german')#german
+    parser.add_argument('--inid', type=str, help="Input dataset",default='')
+    parser.add_argument('--runs', type=int, help="Number of runs",default=5) # 5
+    parser.add_argument('--encoder', type=str,help="Encoder type", default='GCN')
+    parser.add_argument('--prop', type=str, help="CCN selection",default='scatter')
 
-    parser.add_argument('--seed', type=int,help="初始化种子",default=22)# B1->14
-    parser.add_argument('--gpu', type=int, help="使用的gpu编号,若没有自动变为cpu",default=0)
+    parser.add_argument('--hidden', type=int,help="Encoder output feature dimension", default=16)
 
-    parser.add_argument('--dropout', type=float, help="编码器encoder的dropout概率",default=0.5)
-    parser.add_argument('--top_k', type=int,help="利用superman算法算得与敏感属性前K个相似的特征",default=10)
-    parser.add_argument('--alpha', type=float, help="计算auc_rocs+F1+acc-args.alpha*(tmp_parity+tmp_equality)",default=1)
+    parser.add_argument('--seed', type=int,help="Initialization seed",default=22)# B1->14
+    parser.add_argument('--gpu', type=int, help="GPU ID to use, automatically switches to CPU if not available",default=0)
 
-    # 学习率参数
-    parser.add_argument('--fairnet_lr', type=float, help="公平网络学习率 ", default=0.001)
-    parser.add_argument('--baisnet_lr', type=float, help="偏见网络学习率", default=0.001)
-    parser.add_argument('--discri_F_lr', type=float, help="判别器F的学习率 ", default=0.01)
-    parser.add_argument('--discri_B_lr', type=float, help="判别器B的学习率 ", default=0.01)
-    parser.add_argument('--classify_lr', type=float, help="分类器的学习率 ", default=0.01)
-    parser.add_argument('--encoder_lr', type=float, help="编码器的学习率 ", default=0.01)
+    parser.add_argument('--dropout', type=float, help="Encoder dropout probability",default=0.5)
+    parser.add_argument('--top_k', type=int,help="Use superman algorithm to calculate top K features most similar to sensitive attributes",default=10)
+    parser.add_argument('--alpha', type=float, help="Calculate auc_rocs+F1+acc-args.alpha*(tmp_parity+tmp_equality)",default=1)
 
-    parser.add_argument('--de_feature_lr', type=float, help="数据编辑结点特征训练的学习率 ", default=0.001)
-    parser.add_argument('--de_edge_lr', type=float, help="数据编辑边特征训练的学习率 ", default=0.001)
+    # Learning rate parameters
+    parser.add_argument('--fairnet_lr', type=float, help="Fair network learning rate", default=0.001)
+    parser.add_argument('--baisnet_lr', type=float, help="Bias network learning rate", default=0.001)
+    parser.add_argument('--discri_F_lr', type=float, help="Discriminator F learning rate", default=0.01)
+    parser.add_argument('--discri_B_lr', type=float, help="Discriminator B learning rate", default=0.01)
+    parser.add_argument('--classify_lr', type=float, help="Classifier learning rate", default=0.01)
+    parser.add_argument('--encoder_lr', type=float, help="Encoder learning rate", default=0.01)
 
-    # 训练轮数参数调整
-    parser.add_argument('--epochs', type=int, help="整体模型微调的总轮数", default=20)
-    parser.add_argument('--df_epochs', type=int, help="判别器F微调的总轮数", default=20)
-    parser.add_argument('--db_epochs', type=int, help="判别器B微调的总轮数", default=20)
-    parser.add_argument('--class_epochs', type=int, help="训练分类器微调的总轮数", default=40)
-    parser.add_argument('--ad_MLP_F_epochs', type=int, help="对抗训练公平网络F微调的总轮数", default=20)
-    parser.add_argument('--align_epochs', type=int, help="公平网络与偏见网络疏远，encoder,classify微调的总轮数",default=10)
+    parser.add_argument('--de_feature_lr', type=float, help="Data editing node feature training learning rate", default=0.001)
+    parser.add_argument('--de_edge_lr', type=float, help="Data editing edge feature training learning rate", default=0.001)
+
+    # Training epoch parameter adjustments
+    parser.add_argument('--epochs', type=int, help="Total epochs for overall model fine-tuning", default=20)
+    parser.add_argument('--df_epochs', type=int, help="Total epochs for discriminator F fine-tuning", default=20)
+    parser.add_argument('--db_epochs', type=int, help="Total epochs for discriminator B fine-tuning", default=20)
+    parser.add_argument('--class_epochs', type=int, help="Total epochs for classifier training fine-tuning", default=40)
+    parser.add_argument('--ad_MLP_F_epochs', type=int, help="Total epochs for adversarial training fair network F fine-tuning", default=20)
+    parser.add_argument('--align_epochs', type=int, help="Total epochs for fair network and bias network alienation, encoder,classify fine-tuning",default=10)
 
 
-    # 数据编辑的相关参数
+    # Data editing related parameters
 
-    parser.add_argument('--de_train', type=int, help="数据编辑每几个epoch进行一次训练", default=4)
-    parser.add_argument('--de_traintype_switch', type=int, help="是采用结点特征和边共同训练(1)，还是分离训练开关(0)",
+    parser.add_argument('--de_train', type=int, help="How often to train data editing per epoch", default=4)
+    parser.add_argument('--de_traintype_switch', type=int, help="Whether to use combined training (1) or separate training (0) for node features and edges",
                         default=0)
-    parser.add_argument('--de_together_epochs', type=int, help="数据编辑中共同训练的总轮数", default=5)
+    parser.add_argument('--de_together_epochs', type=int, help="Total epochs for combined training in data editing", default=5)
 
-    parser.add_argument('--de_separate_epochs', type=int, help="数据编辑中分离训练的总轮数", default=5)
-    parser.add_argument('--de_separate_node_epochs', type=int, help="数据编辑中分离训练中结点特征的总轮数", default=5)
-    parser.add_argument('--de_separate_edge_epochs', type=int, help="数据编辑中分离训练中边的权重特征的总轮数",
+    parser.add_argument('--de_separate_epochs', type=int, help="Total epochs for separate training in data editing", default=5)
+    parser.add_argument('--de_separate_node_epochs', type=int, help="Total epochs for node feature training in separate training", default=5)
+    parser.add_argument('--de_separate_edge_epochs', type=int, help="Total epochs for edge weight feature training in separate training",
                         default=5)
 
 
@@ -356,12 +342,12 @@ if __name__ == '__main__':
     print(args)
     seed_everything(args.seed)
 
-    # 获取数据
+    # Get data
     data, _ , args.corr_sens, args.corr_idx, args.x_min, args.x_max = get_dataset(
         args.dataset, args.inid, args.top_k)
 
 
-    # 设置 test set类别
+    # Set test set categories
     data2 = []
     if args.dataset == "credit":
 
@@ -401,15 +387,6 @@ if __name__ == '__main__':
 
 
     acc, f1, auc_roc, parity, equality = run(data, args, data2) # data is training data.data2 is testing data
-
-    for i in range(len(args.strlist)):
-
-        print("==========={}============".format(args.inid+args.strlist[i]))
-        print('Acc     :',['{:.5f}'.format(100*x)if x!=0 else "feile!!" for x in acc.T[i]])
-        print('auc_roc :',['{:.5f}'.format(100*x)if x!=0 else "feile!!"for x in auc_roc.T[i]])
-        print('F1      :',['{:.5f}'.format(100*x)if x!=0 else "feile!!"for x in f1.T[i]])
-        print('parity  :',['{:.5f}'.format(100*x)if x!=0 else "feile!!"for x in parity.T[i]])
-        print('equality:',['{:.5f}'.format(100*x)if x!=0 else "feile!!"for x in equality.T[i]])
     for i in range(len(args.strlist)):
         print("==========={}============".format(args.inid+args.strlist[i]))
         print('Acc     :{:.5f}'.format( 100*np.mean(acc.T[i])))
@@ -417,7 +394,3 @@ if __name__ == '__main__':
         print('F1      :{:.5f}'.format( 100*np.mean(f1.T[i])))
         print('parity  :{:.5f}'.format( 100*np.mean(parity.T[i])))
         print('equality:{:.5f}'.format( 100*np.mean(equality.T[i])))
-
-
-
-

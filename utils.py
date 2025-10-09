@@ -21,14 +21,14 @@ import yaml
 
 
 def eval_tool(pre,y,sens):
-    acc = ((pre == y).sum() / y.shape[0])  # 伪标签准确率
-    acc_1 = ((pre == 1).int() * (y == 1).int()).sum() / (y == 1).int().sum()  # 伪标签为1的准确率
-    acc_0 = ((pre == 0).int() * (y == 0).int()).sum() / (y == 0).int().sum()  # 伪标签为0的准确率
+    acc = ((pre == y).sum() / y.shape[0])  # Pseudo-label accuracy
+    acc_1 = ((pre == 1).int() * (y == 1).int()).sum() / (y == 1).int().sum()  # Accuracy of pseudo-label 1
+    acc_0 = ((pre == 0).int() * (y == 0).int()).sum() / (y == 0).int().sum()  # Accuracy of pseudo-label 0
     TP = ((pre == 1).int() * (y == 1).int()).sum()
     TN = ((pre == 0).int() * (y == 0).int()).sum()
     FP = ((pre == 1).int() * (y == 0).int()).sum()
     FN = ((pre == 0).int() * (y == 1).int()).sum()
-    F1 = 2*TP/(2*TP+FP+FN) # 针对数据不平衡问题
+    F1 = 2*TP/(2*TP+FP+FN) # For data imbalance problem
     parity, equality = fair_metric(pre.cpu().numpy(), y.cpu().numpy(), sens.cpu().numpy())
     result = {
         'acc': acc,
@@ -51,36 +51,36 @@ from torch_sparse import SparseTensor
 @torch.no_grad()
 def update_labels_by_neighbors_with_predictions(
     data, encoder, classifier,
-    alpha: float = 0.25,   # 传播强度（越小越稳，0.05~0.2 常用）
-    K: int = 3,           # 迭代步数（2~10，过大易过平滑）
+    alpha: float = 0.25,   # Propagation strength (smaller is more stable, 0.05~0.2 commonly used)
+    K: int = 3,           # Iteration steps (2~10, too large easily leads to over-smoothing)
     add_self_loop: bool = True
 ):
     """
-    1) 用 encoder+classifier 生成初始预测 P0（概率分布）；
-    2) 用对称归一化稀疏邻接 A_sym = D^{-1/2}(A+I)D^{-1/2} 做 K 次传播：
+    1) Use encoder+classifier to generate initial prediction P0 (probability distribution);
+    2) Use symmetric normalized sparse adjacency A_sym = D^{-1/2}(A+I)D^{-1/2} for K times propagation:
            P <- (1 - alpha) * P0 + alpha * (A_sym @ P)
-       每步保持行为概率分布并数值安全；
-    3) 输出 new_y = argmax(P)。
+       Keep behavior probability distribution and numerical safety at each step;
+    3) Output new_y = argmax(P).
     """
     eps = 1e-12
 
-    # ---------- 1) 初始预测 ----------
+    # ---------- 1) Initial prediction ----------
     encoder.eval(); classifier.eval()
     h = encoder(data.x, data.edge_index, getattr(data, "adj_norm_sp", None),data.edge_weight)
     logits = classifier(h)
 
-    # 支持二分类/多分类：
+    # Support binary classification/multi-classification:
     if logits.dim() == 1 or logits.size(-1) == 1:
-        # 二分类：sigmoid -> (1-p, p)
+        # Binary classification: sigmoid -> (1-p, p)
         p = torch.sigmoid(logits.view(-1)).clamp(0.0 + 1e-6, 1.0 - 1e-6)
         P0 = torch.stack([1 - p, p], dim=1)  # (N, 2)
     else:
-        # 多分类：softmax
+        # Multi-classification: softmax
         P0 = torch.softmax(logits, dim=1)
 
     P = P0.clone()
 
-    # ---------- 2) 构建对称归一化稀疏邻接 A_sym ----------
+    # ---------- 2) Build symmetric normalized sparse adjacency A_sym ----------
     num_nodes = data.x.size(0)
     row, col = data.edge_index  # shape: (2, E)
 
@@ -88,37 +88,25 @@ def update_labels_by_neighbors_with_predictions(
     if add_self_loop:
         A = A.set_diag()
 
-    deg = A.sum(dim=1).to(torch.float)          # 度 D (N,)
+    deg = A.sum(dim=1).to(torch.float)          # Degree D (N,)
     deg = deg.clamp_min(eps)
     d_is = deg.pow(-0.5)                        # D^{-1/2}
     A_sym = A.mul(d_is.view(-1, 1)).mul(d_is.view(1, -1))  # D^{-1/2} A D^{-1/2}
 
-    # ---------- 3) 稳定传播 ----------
+    # ---------- 3) Stable propagation ----------
     for _ in range(K):
-        neighbor = A_sym.matmul(P)                       # 稀疏×稠密
+        neighbor = A_sym.matmul(P)                       # Sparse×Dense
         P = (1 - alpha) * P0 + alpha * neighbor
-        P = P / P.sum(dim=1, keepdim=True).clamp_min(eps)  # 保持为概率分布
+        P = P / P.sum(dim=1, keepdim=True).clamp_min(eps)  # Keep as probability distribution
 
-    # ---------- 4) 输出 ----------
+    # ---------- 4) Output ----------
     new_labels = P.argmax(dim=1)
     data.new_y = new_labels
-    data.new_probs = P      # 若后续要用概率，可顺带存下
+    data.new_probs = P      # If subsequent use of probabilities is needed, store them
     # import ipdb; ipdb.set_trace()
-    eval_tool(torch.argmax(P0, dim=1), data.y,data.sens)  # 直接预测的伪标签准确率
-    eval_tool(data.new_y, data.y,data.sens)  # 传播后的伪标签准确率
+    eval_tool(torch.argmax(P0, dim=1), data.y,data.sens)  # Pseudo-label accuracy of direct prediction
+    eval_tool(data.new_y, data.y,data.sens)  # Pseudo-label accuracy after propagation
     return data
-
-
-
-
-
-
-
-
-
-
-
-
 
 def drop_feature(x, drop_prob, sens_idx, sens_flag=True):
     drop_mask = torch.empty(
@@ -224,26 +212,9 @@ def seed_everything(seed=0):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     # os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
-    # 强制 PyTorch 1.8+ 所有操作确定性
+    # Force PyTorch 1.8+ all operations to be deterministic
     if hasattr(torch, 'use_deterministic_algorithms'):
         torch.use_deterministic_algorithms(True)
-
-    # random.seed(seed)
-    # torch.manual_seed(seed)
-    # torch.cuda.manual_seed(seed)
-    # np.random.seed(seed)
-    # torch.backends.cudnn.allow_tf32 = False
-    #
-    # os.environ['PYTHONHASHSEED'] = str(seed)
-    # torch.backends.cudnn.deterministic = True
-    # torch.backends.cudnn.enabled = True
-    # # torch.use_deterministic_algorithms(True)
-    #
-    # torch.manual_seed(seed)
-    # torch.cuda.manual_seed_all(seed)
-    # torch.backends.cudnn.deterministic = True
-    # torch.backends.cudnn.benchmark = False
-
 
 def fair_metric(pred, labels, sens):
     idx_s0 = sens == 0
@@ -533,25 +504,3 @@ def read_config(args):
 
     return args
 
-
-
-
-data = [
-    (0.1, 0.1, 65.97473, 63.93735,  0.00927, 3.24839),
-    (0.1, 0.3, 79.96390, 67.77624,  2.24094, 1.64228),
-    (0.1, 0.5, 63.53791, 67.82912,  2.61840, 6.49941),
-    (0.1, 0.7, 78.24910, 59.99177,  1.70322, 3.17607),
-    (0.1, 0.9, 71.66065, 59.37231,  2.72568, 7.32778),
-    (0.3, 0.1, 71.20939, 66.93308,  0.81982, 4.77233),
-    (0.3, 0.3, 74.54874, 59.37147,  1.33106, 3.47915),
-    (0.3, 0.5, 75.81227, 60.80303,  1.87937, 3.70663),
-    (0.3, 0.7, 60.74007, 67.86773,  2.19194, 5.49288),
-    (0.5, 0.1, 78.70036, 69.61813,  3.68192, 2.61134),
-    (0.5, 0.3, 64.25993, 67.53587,  0.23178, 2.37860),
-    (0.5, 0.5, 65.43321, 63.56777,  1.58137, 5.59413),
-    (0.5, 0.2, 74.90975, 66.09547,  0.37084, 0.09073),
-    (0.7, 0.1, 72.83394, 63.98033,  3.88191, 5.87551),
-    (0.9, 0.1, 71.20939, 64.86659,  0.27681, 4.31738),
-    (1.0, 0.0, 71.66065, 70.23309,  1.57872, 3.65140),
-    (0.5, 0.0, 68.23105, 66.97529,  1.68335, 5.99713),
-]

@@ -13,9 +13,6 @@ import math
 from pandas import DataFrame
 from utils import read_config
 
-
-
-
 def run(data, args, data2):
     #criterion = nn.BCELoss()
     criterion = nn.BCEWithLogitsLoss()
@@ -90,7 +87,7 @@ def run(data, args, data2):
         best_val_tradeoff = 0
         best_val_loss = math.inf
         for epoch in range(args.epochs):
-            '训练鉴别器与encorder'
+            'Train discriminator and encoder'
             discriminator.train()
             encoder.eval()
             for epoch_d in range(0, args.dic_epochs):
@@ -117,7 +114,7 @@ def run(data, args, data2):
                 optimizer_c.step()
 
 
-            '对抗训练encorder'
+            'Adversarial training encoder'
             discriminator.eval()
             encoder.train()
             optimizer_e.zero_grad()
@@ -173,26 +170,26 @@ def run(data, args, data2):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, help="数据集种类", default='bail')
-    parser.add_argument('--inid', type=str, help="作为source data的训练数据", default='_B0')
-    parser.add_argument('--outid', type=str, help="作为test的数据", default='all')
-    parser.add_argument('--dropout', type=float, help="编码器encoder的dropout概率",default=0.5)
-    parser.add_argument('--top_k', type=int,help="利用superman算法算得与敏感属性前K个相似的特征",default=10)
-    parser.add_argument('--alpha', type=float, help="计算auc_rocs+F1+acc-args.alpha*(tmp_parity+tmp_equality)",default=1)
-    parser.add_argument('--runs', type=int, help="运行次数", default=5)  # 5
-    parser.add_argument('--hidden', type=int, help="编码器encoder输出特征的维度 ", default=16)
-    parser.add_argument('--seed', type=int, help="随机种子", default=12)
+    parser.add_argument('--dataset', type=str, help="dataset name", default='bail')
+    parser.add_argument('--inid', type=str, help="Training data as source data", default='_B0')
+    parser.add_argument('--outid', type=str, help="Data as test", default='all')
+    parser.add_argument('--dropout', type=float, help="Dropout probability of encoder",default=0.5)
+    parser.add_argument('--top_k', type=int,help="Top K features most similar to sensitive attributes using superman algorithm",default=10)
+    parser.add_argument('--alpha', type=float, help="Calculate auc_rocs+F1+acc-args.alpha*(tmp_parity+tmp_equality)",default=1)
+    parser.add_argument('--runs', type=int, help="Number of runs", default=5)  # 5
+    parser.add_argument('--hidden', type=int, help="Output feature dimension of encoder", default=16)
+    parser.add_argument('--seed', type=int, help="Random seed", default=12)
 
-    parser.add_argument('--d_lr', type=float, help="分辨器的学习率", default=0.01)
-    parser.add_argument('--c_lr', type=float, help="分类器的学习率", default=0.005)
-    parser.add_argument('--e_lr', type=float, help="编码器的学习率", default=0.001)
-    parser.add_argument('--gpu', type=int, help="gpu卡号", default=0)
+    parser.add_argument('--d_lr', type=float, help="Learning rate of discriminator", default=0.01)
+    parser.add_argument('--c_lr', type=float, help="Learning rate of classifier", default=0.005)
+    parser.add_argument('--e_lr', type=float, help="Learning rate of encoder", default=0.001)
+    parser.add_argument('--gpu', type=int, help="GPU card number", default=0)
 
-    parser.add_argument('--epochs', type=int, help="训练轮数", default=20)
-    parser.add_argument('--dic_epochs', type=int, help="鉴别器的训练轮数",default=40)
-    parser.add_argument('--cla_epochs', type=int, help="分类器的训练轮数",default=40)
-    parser.add_argument('--g_epochs', type=int, help="对抗网络的训练轮数",default=10)
-    parser.add_argument('--encoder', type=str, help="编码器encoder的种类",default='GCN')
+    parser.add_argument('--epochs', type=int, help="Number of training epochs", default=20)
+    parser.add_argument('--dic_epochs', type=int, help="Training epochs of discriminator",default=40)
+    parser.add_argument('--cla_epochs', type=int, help="Training epochs of classifier",default=40)
+    parser.add_argument('--g_epochs', type=int, help="Training epochs of adversarial network",default=10)
+    parser.add_argument('--encoder', type=str, help="Type of encoder",default='GCN')
     parser.add_argument('--prop', type=str, default='scatter')
 
 
@@ -247,15 +244,6 @@ if __name__ == '__main__':
 
 
     acc, f1, auc_roc, parity, equality = run(data, args, data2) # data is training data.data2 is testing data
-
-    for i in range(len(args.strlist)):
-
-        print("==========={}============".format(args.inid+args.strlist[i]))
-        print('Acc     :',['{:.5f}'.format(x)if x!=0 else "feile!!" for x in acc.T[i]])
-        print('auc_roc :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in auc_roc.T[i]])
-        print('F1      :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in f1.T[i]])
-        print('parity  :',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in parity.T[i]])
-        print('equality:',['{:.5f}'.format(x)if x!=0 else "feile!!"for x in equality.T[i]])
     for i in range(len(args.strlist)):
         print("==========={}============".format(args.inid+args.strlist[i]))
         print('Acc     :{:.5f}'.format( 100*np.mean(acc.T[i])))
@@ -263,57 +251,3 @@ if __name__ == '__main__':
         print('F1      :{:.5f}'.format( 100*np.mean(f1.T[i])))
         print('parity  :{:.5f}'.format( 100*np.mean(parity.T[i])))
         print('equality:{:.5f}'.format( 100*np.mean(equality.T[i])))
-
-
-'''
-(pytorch) zhangxin@zhangxindeMacBook-Pro FatraGNN-main % python train_source.py
-Namespace(dataset='bail', inid='_B0', outid='', dropout=0.5, top_k=10, alpha=1, runs=5, hidden=16, d_lr=0.01, c_lr=0.005, e_lr=0.001, gpus=0, epochs=20, dic_epochs=40, cla_epochs=40, g_epochs=10, encoder='GCN', prop='scatter', strlist=None, device=device(type='cpu'))
-=========1========
-=========2========
-=========3========
-=========4========
-=========5========
-===========_B1============
-Acc:  [0.72743682 0.72202166 0.72021661 0.71389892 0.71750903]
-auc_roc:  [0.81294277 0.81106886 0.8170788  0.81590577 0.81610303]
-parity:  [0.02953486 0.00709896 0.01034382 0.01059547 0.00460903]
-equality:  [0.06496785 0.05643433 0.051543   0.0549025  0.05319317]
-===========_B2============
-Acc:  [0.8572621  0.85642738 0.85475793 0.85392321 0.85893155]
-auc_roc:  [0.89160395 0.8927643  0.89367731 0.89322413 0.89428156]
-parity:  [0.07919411 0.08068981 0.06931019 0.07104029 0.08300592]
-equality:  [0.09237175 0.09353527 0.07922368 0.08108588 0.08701899]
-===========_B3============
-Acc:  [0.75428571 0.75928571 0.78928571 0.78285714 0.775     ]
-auc_roc:  [0.90169065 0.90691031 0.91086395 0.90938777 0.91273878]
-parity:  [0.08104575 0.07947095 0.08739643 0.0842777  0.08410272]
-equality:  [0.0541369  0.04948238 0.05580178 0.05360363 0.05093101]
-===========_B4============
-Acc:  [0.81072027 0.81909548 0.83082077 0.83082077 0.82579564]
-auc_roc:  [0.90282542 0.90489516 0.90335414 0.90246434 0.90600418]
-parity:  [0.07983652 0.04642426 0.05977778 0.06058605 0.05241229]
-equality:  [0.08854811 0.06407258 0.07287568 0.06644481 0.06379151]
-===========_B1============
-Acc:  0.720216606498195
-auc_roc:  0.8146198462261618
-parity:  0.012436427209154489
-equality:  0.056208170617858585
-===========_B2============
-Acc:  0.8562604340567613
-auc_roc:  0.8931102486379527
-parity:  0.076648063399933
-equality:  0.08664711500266227
-===========_B3============
-Acc:  0.7721428571428571
-auc_roc:  0.9083182934467299
-parity:  0.0832587103082703
-equality:  0.05279113856282973
-===========_B4============
-Acc:  0.8234505862646566
-auc_roc:  0.9039086477703556
-parity:  0.05980738143484893
-equality:  0.0711465383491107
-
-
-
-'''

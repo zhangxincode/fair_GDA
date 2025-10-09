@@ -24,14 +24,14 @@ class DataAug(nn.Module):
         self.num_features = num_features
         self.temperature = 0.7
 
-        # 初始化扰动参数，确保这些参数是可训练的
-        self.delta_X = torch.zeros_like(torch.ones(num_nodes,num_features), requires_grad=True,device=args.device)  # 节点特征扰动
+        # Initialize perturbation parameters, ensuring these parameters are trainable
+        self.delta_X = torch.zeros_like(torch.ones(num_nodes,num_features), requires_grad=True,device=args.device)  # Node feature perturbation
 
-        # `delta_A` 用于扰动边索引，所以它的维度应该和 edge_index 一样
-        # self.delta_A = torch.zeros_like(torch.ones(2,num_edge), dtype=torch.float, requires_grad=True)  # 邻接矩阵扰动
-        self.delta_A = torch.zeros_like(torch.ones(num_edge), dtype=torch.float, requires_grad=True,device=args.device)  # 邻接矩阵扰动
+        # `delta_A` is used to perturb edge indices, so its dimension should be the same as edge_index
+        # self.delta_A = torch.zeros_like(torch.ones(2,num_edge), dtype=torch.float, requires_grad=True)  # Adjacency matrix perturbation
+        self.delta_A = torch.zeros_like(torch.ones(num_edge), dtype=torch.float, requires_grad=True,device=args.device)  # Adjacency matrix perturbation
 
-        # 冻结 encoder 和 classifier 的参数
+        # Freeze parameters of encoder and classifier
         for param in self.encoder.parameters():
             param.requires_grad = False
         for param in self.classifier.parameters():
@@ -41,7 +41,7 @@ class DataAug(nn.Module):
     def forward(self, data,args,eps = 1e-6):
 
         self.delta_X = self.delta_X .to(args.device)
-        x1 = data.x + self.delta_X  # 可训练扰动
+        x1 = data.x + self.delta_X  # Trainable perturbation
 
 
         h = self.encoder(x1, data.edge_index, data.adj_norm_sp,edge_weight=self.delta_A)
@@ -57,21 +57,21 @@ class DataAug(nn.Module):
         z2 = F.normalize(h1)
         sim = torch.mm(z1, z2.t()) / self.temperature  # [batch_size, batch_size]
 
-        # 构造正样本的相似度向量（对角线）
+        # Construct positive sample similarity vector (diagonal)
         pos_sim = sim.diag().view(batch_size, 1)  # [batch_size, 1]
 
 
         denom = torch.logsumexp(sim, dim=1, keepdim=True)  # [batch_size, 1]
 
-        # 每个锚点的损失： - (正样本的相似度 - 分母)
+        # Loss for each anchor: - (positive sample similarity - denominator)
         loss_i = - (pos_sim - denom).mean()
 
-        # 对称地，从z2到z1
+        # Symmetrically, from z2 to z1
         denom_j = torch.logsumexp(sim.t(), dim=1, keepdim=True)
-        loss_j = - (pos_sim - denom_j).mean()  # 注意，这里正样本的相似度还是对角线，但转置后对角线不变
+        loss_j = - (pos_sim - denom_j).mean()  # Note, the positive sample similarity here is still diagonal, but the diagonal remains unchanged after transposition
 
-        # 或者，也可以重新计算以z2为锚点的正样本，但注意，正样本还是对角线，所以可以直接用sim.t().diag()
-        # 但这里我们直接使用对称性，用同样的pos_sim（因为对角线不变）
+        # Alternatively, we can also recalculate the positive samples with z2 as the anchor, but note that the positive samples are still diagonal, so we can directly use sim.t().diag()
+        # But here we directly use symmetry, with the same pos_sim (because the diagonal remains unchanged)
 
         loss = (loss_i + loss_j) / 2
         return loss, self.delta_X,self.delta_A
@@ -92,7 +92,7 @@ def train_data_aug(data,data_aug,args):
     with torch.no_grad():
         loss,delta_X,delta_A= data_aug(data33,args)
         data33.x = data33.x + delta_X
-        #对敏感属性不进行训练
+        # Do not train sensitive attributes
         data33.x[:, 1] = data33.sens
         data33.edge_weight = delta_A
     return data33
@@ -114,18 +114,18 @@ class DE_X(nn.Module):
         self.num_features = num_features
         self.temperature = 0.7
 
-        # 初始化扰动参数，确保这些参数是可训练的
-        self.delta_X = torch.zeros_like(torch.ones(num_nodes, num_features), requires_grad=True,device=args.device)  # 节点特征扰动
-        self.delta_A = torch.zeros_like(torch.ones(num_edge), dtype=torch.float, requires_grad=False)  # 邻接矩阵扰动
+        # Initialize perturbation parameters, ensuring these parameters are trainable
+        self.delta_X = torch.zeros_like(torch.ones(num_nodes, num_features), requires_grad=True,device=args.device)  # Node feature perturbation
+        self.delta_A = torch.zeros_like(torch.ones(num_edge), dtype=torch.float, requires_grad=False)  # Adjacency matrix perturbation
 
-        # 冻结 encoder 和 classifier 的参数
+        # Freeze parameters of encoder and classifier
         for param in self.encoder.parameters():
             param.requires_grad = False
 
 
     def forward(self, data,args, eps=1e-6):
         self.delta_X = self.delta_X.to(args.device)
-        x1 = data.x + self.delta_X  # 可训练扰动
+        x1 = data.x + self.delta_X  
 
 
         h = self.encoder(x1, data.edge_index, data.adj_norm_sp, edge_weight=self.delta_A.to(args.device))
@@ -140,20 +140,18 @@ class DE_X(nn.Module):
         z2 = F.normalize(h1)
         sim = torch.mm(z1, z2.t()) / self.temperature  # [batch_size, batch_size]
 
-        # 构造正样本的相似度向量（对角线）
         pos_sim = sim.diag().view(batch_size, 1)  # [batch_size, 1]
 
         denom = torch.logsumexp(sim, dim=1, keepdim=True)  # [batch_size, 1]
 
-        # 每个锚点的损失： - (正样本的相似度 - 分母)
+    
         loss_i = - (pos_sim - denom).mean()
 
-        # 对称地，从z2到z1
-        denom_j = torch.logsumexp(sim.t(), dim=1, keepdim=True)
-        loss_j = - (pos_sim - denom_j).mean()  # 注意，这里正样本的相似度还是对角线，但转置后对角线不变
 
-        # 或者，也可以重新计算以z2为锚点的正样本，但注意，正样本还是对角线，所以可以直接用sim.t().diag()
-        # 但这里我们直接使用对称性，用同样的pos_sim（因为对角线不变）
+        denom_j = torch.logsumexp(sim.t(), dim=1, keepdim=True)
+        loss_j = - (pos_sim - denom_j).mean()  
+
+    
 
         loss = (loss_i + loss_j) / 2
         return loss, self.delta_X, self.delta_A
@@ -166,18 +164,18 @@ class DE_A(nn.Module):
         self.num_features = num_features
         self.temperature = 0.7
 
-        # 初始化扰动参数，确保这些参数是可训练的
-        self.delta_X = torch.zeros_like(torch.ones(num_nodes, num_features), requires_grad=False)  # 节点特征扰动
-        self.delta_A = torch.zeros_like(torch.ones(num_edge), dtype=torch.float, requires_grad=True,device=args.device)  # 邻接矩阵扰动
+        # Initialize perturbation parameters, ensuring these parameters are trainable
+        self.delta_X = torch.zeros_like(torch.ones(num_nodes, num_features), requires_grad=False)  # Node feature perturbation
+        self.delta_A = torch.zeros_like(torch.ones(num_edge), dtype=torch.float, requires_grad=True,device=args.device)  # Adjacency matrix perturbation
 
-        # 冻结 encoder 和 classifier 的参数
+        # Freeze parameters of encoder and classifier
         for param in self.encoder.parameters():
             param.requires_grad = False
 
 
     def forward(self, data,args, eps=1e-6):
         self.delta_X = self.delta_X.to(args.device)
-        x1 = data.x + self.delta_X  # 可训练扰动
+        x1 = data.x + self.delta_X  # Trainable perturbation
 
         h = self.encoder(x1, data.edge_index, data.adj_norm_sp, edge_weight=self.delta_A)
 
@@ -191,20 +189,20 @@ class DE_A(nn.Module):
         z2 = F.normalize(h1)
         sim = torch.mm(z1, z2.t()) / self.temperature  # [batch_size, batch_size]
 
-        # 构造正样本的相似度向量（对角线）
+        # Construct positive sample similarity vector (diagonal)
         pos_sim = sim.diag().view(batch_size, 1)  # [batch_size, 1]
 
         denom = torch.logsumexp(sim, dim=1, keepdim=True)  # [batch_size, 1]
 
-        # 每个锚点的损失： - (正样本的相似度 - 分母)
+        # Loss for each anchor: - (positive sample similarity - denominator)
         loss_i = - (pos_sim - denom).mean()
 
-        # 对称地，从z2到z1
+        # Symmetrically, from z2 to z1
         denom_j = torch.logsumexp(sim.t(), dim=1, keepdim=True)
-        loss_j = - (pos_sim - denom_j).mean()  # 注意，这里正样本的相似度还是对角线，但转置后对角线不变
+        loss_j = - (pos_sim - denom_j).mean()  # Note, the positive sample similarity here is still diagonal, but the diagonal remains unchanged after transposition
 
-        # 或者，也可以重新计算以z2为锚点的正样本，但注意，正样本还是对角线，所以可以直接用sim.t().diag()
-        # 但这里我们直接使用对称性，用同样的pos_sim（因为对角线不变）
+        # Alternatively, we can also recalculate the positive samples with z2 as the anchor, but note that the positive samples are still diagonal, so we can directly use sim.t().diag()
+        # But here we directly use symmetry, with the same pos_sim (because the diagonal remains unchanged)
 
         loss = (loss_i + loss_j) / 2
         return loss, self.delta_X, self.delta_A
@@ -243,7 +241,7 @@ def train_data_edit(data, de_a,de_x,args):
         loss,dex,delta_A = de_a(data33,args)
 
         data33.x = data33.x + delta_X
-        # 对敏感属性不进行训练
+        # Do not train sensitive attributes
         data33.x[:, data33.sen_idx] = data.x[:, data.sen_idx]
 
         data33.edge_weight = delta_A
