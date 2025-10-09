@@ -81,7 +81,7 @@ def run(data, args, data2):
             train_name = "_B0"
         elif args.dataset == "credit":
             train_name = "_C0"
-        elif args.dataset == 'model_para_pokec':
+        elif args.dataset == 'pokec':
             train_name = "_z"
 
         classifier = torch.load('./model_para/{}/{}_classifier_best_0.pth'.format(args.dataset, train_name),
@@ -295,15 +295,9 @@ def run(data, args, data2):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-<<<<<<<< HEAD:train_target.py
     parser.add_argument('--dataset', type=str,help="数据集种类",default='bail')#german
     parser.add_argument('--inid', type=str, help="作为输入的数据集",default='_B1')
     parser.add_argument('--runs', type=int, help="运行次数",default=1) # 5
-========
-    parser.add_argument('--dataset', type=str,help="数据集种类",default='german')#german
-    parser.add_argument('--inid', type=str, help="作为输入的数据集",default='')
-    parser.add_argument('--runs', type=int, help="运行次数",default=5) # 5
->>>>>>>> origin/main:rubish/data_aug.py
 
     parser.add_argument('--encoder', type=str,help="编码器encoder种类", default='GCN')
     parser.add_argument('--prop', type=str, help="CCN的选择",default='scatter')
@@ -376,7 +370,7 @@ if __name__ == '__main__':
             datatmp, _, _, _, _, _ = get_dataset(
                 args.dataset,  args.strlist[i], args.top_k)
             data2.append(datatmp)
-    elif args.dataset == "model_para_pokec":
+    elif args.dataset == "pokec":
         args.strlist = [args.inid]
         args.inidIndex = args.strlist.index(args.inid)
         for i in range(len(args.strlist)):
@@ -387,7 +381,7 @@ if __name__ == '__main__':
                 args.dataset,  args.strlist[i], args.top_k)
             data2.append(datatmp)
     args.num_features, args.num_classes = data.x.shape[1], len(data.y.unique()) - 1
-    if args.dataset == "model_para_pokec":
+    if args.dataset == "pokec":
         args.num_classes = 1
     args.train_ratio, args.val_ratio = torch.tensor(
         [(data.y[data.train_mask] == 0).sum(), (data.y[data.train_mask] == 1).sum()]), \

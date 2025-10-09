@@ -1,0 +1,246 @@
+2025-09-17 13:19:02
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=45, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=40, align_epochs=13, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=5, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['71.95358', '70.88975', '70.88975', '70.88975', '71.66344']
+auc_roc : ['68.62346', '69.77832', '67.45455', '57.77468', '60.25413']
+F1      : ['83.15912', '82.96548', '82.96548', '82.96548', '83.24757']
+parity  : ['1.08376', 'feile!!', 'feile!!', 'feile!!', '0.43351']
+equality: ['3.19149', 'feile!!', 'feile!!', 'feile!!', '1.86170']
+===========_C3_C3============
+Acc     :71.25725
+auc_roc :64.77703
+F1      :83.06062
+parity  :0.30345
+equality:1.01064
+2025-09-17 13:23:21
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=30, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=40, align_epochs=13, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=5, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['69.53578', '70.40619', '70.88975', '70.59961', '71.47002']
+auc_roc : ['67.19847', '66.17596', '65.36398', '65.31752', '63.14264']
+F1      : ['80.73394', '82.25058', '82.24189', '82.70762', '82.43002']
+parity  : ['3.60716', '3.88975', '4.94494', '0.85894', '3.68914']
+equality: ['7.10486', '3.91337', '4.52128', '0.30395', '8.77660']
+===========_C3_C3============
+Acc     :70.58027
+auc_roc :65.43971
+F1      :82.07281
+parity  :3.39799
+equality:4.92401
+2025-09-17 13:26:45
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=30, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=40, align_epochs=13, de_train=4, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=7, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['71.95358', '70.88975', '70.88975', '69.63250', '70.88975']
+auc_roc : ['65.50992', '69.11024', '66.73140', '59.55433', '56.43965']
+F1      : ['83.02108', '82.96548', '82.96548', '81.50766', '82.96548']
+parity  : ['2.63395', 'feile!!', 'feile!!', '0.47884', 'feile!!']
+equality: ['6.07903', 'feile!!', 'feile!!', '2.05167', 'feile!!']
+===========_C3_C3============
+Acc     :70.85106
+auc_roc :63.46911
+F1      :82.68503
+parity  :0.62256
+equality:1.62614
+2025-09-17 13:37:16
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=30, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=40, align_epochs=13, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=7, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['71.85687', '70.88975', '70.98646', '70.69632', '69.53578']
+auc_roc : ['66.36609', '68.46755', '65.39548', '65.27038', '65.83127']
+F1      : ['83.24698', '82.84900', '82.97389', '82.81339', '80.34934']
+parity  : ['4.14749', '1.14525', '0.69125', '0.80987', '0.45338']
+equality: ['1.29179', '1.51976', '0.49392', '0.18997', '9.34650']
+===========_C3_C3============
+Acc     :70.79304
+auc_roc :66.26615
+F1      :82.44652
+parity  :1.44945
+equality:2.56839
+2025-09-17 13:40:07
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=30, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=30, align_epochs=13, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=7, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['70.88975', '70.88975', '71.47002', '70.79304', '70.79304']
+auc_roc : ['65.13577', '65.39298', '65.51649', '66.66410', '67.98280']
+F1      : ['81.74651', '82.96548', '83.15248', '82.82139', '81.33498']
+parity  : ['3.34135', 'feile!!', '1.95512', '1.50112', '2.87492']
+equality: ['6.30699', 'feile!!', '0.49392', '0.30395', '9.95441']
+===========_C3_C3============
+Acc     :70.96712
+auc_roc :66.13843
+F1      :82.40417
+parity  :1.93450
+equality:3.41185
+2025-09-17 13:42:54
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=30, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=30, align_epochs=11, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=7, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['69.34236', '70.69632', '70.88975', '71.08317', '70.21277']
+auc_roc : ['67.44821', '66.53153', '61.05410', '64.03802', '66.37221']
+F1      : ['78.79599', '82.83286', '82.96548', '83.05949', '81.24239']
+parity  : ['1.77004', '0.40494', 'feile!!', '0.40494', '1.22661']
+equality: ['15.08359', '0.11398', 'feile!!', '0.11398', '7.75076']
+===========_C3_C3============
+Acc     :70.44487
+auc_roc :65.08881
+F1      :81.77924
+parity  :0.76130
+equality:4.61246
+2025-09-17 13:45:16
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=27, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=30, align_epochs=11, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=7, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['67.79497', '70.69632', '70.98646', '70.88975', '70.79304']
+auc_roc : ['67.97759', '66.09845', '62.05010', '65.10200', '64.50622']
+F1      : ['77.11340', '82.83286', '83.01246', '82.96548', '82.17237']
+parity  : ['4.90147', '0.40494', '0.52356', 'feile!!', '1.61540']
+equality: ['14.43769', '0.11398', '0.15198', 'feile!!', '4.78723']
+===========_C3_C3============
+Acc     :70.23211
+auc_roc :65.14687
+F1      :81.61931
+parity  :1.48907
+equality:3.89818
+2025-09-17 13:48:39
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=26, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=28, align_epochs=11, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=7, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['70.01934', '70.79304', '70.88975', '71.17988', '69.82592']
+auc_roc : ['66.42479', '66.84607', '62.54345', '57.52313', '61.76864']
+F1      : ['80.95823', '82.78221', '82.96548', '82.83410', '81.71161']
+parity  : ['1.49243', '2.31099', 'feile!!', '1.46013', '3.68107']
+equality: ['6.87690', '2.20365', 'feile!!', '3.22948', '1.59574']
+===========_C3_C3============
+Acc     :70.54159
+auc_roc :63.02122
+F1      :82.25033
+parity  :1.78892
+equality:2.78116
+2025-09-17 14:07:01
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=26, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=28, align_epochs=11, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=5, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['70.01934', '70.40619', '70.21277', '71.47002', '38.78143']
+auc_roc : ['65.75762', '67.01355', '66.58455', '66.27680', '63.06423']
+F1      : ['81.39256', '82.37327', '82.03034', '82.99712', '26.98962']
+parity  : ['5.35795', '2.74450', '5.27225', '4.55243', '5.93865']
+equality: ['5.12918', '2.39362', '2.39362', '0.98784', '4.06535']
+===========_C3_C3============
+Acc     :64.17795
+auc_roc :65.73935
+F1      :71.15658
+parity  :4.77315
+equality:2.99392
+2025-09-17 14:25:01
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=28, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=28, align_epochs=11, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=5, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['70.21277', '70.59961', '70.21277', '71.47002', '69.14894']
+auc_roc : ['66.07511', '67.35529', '67.59120', '65.58198', '66.25233']
+F1      : ['81.57895', '82.42775', '81.88235', '82.97750', '80.65494']
+parity  : ['4.14314', '4.60149', '4.25369', '4.95736', '3.98353']
+equality: ['4.78723', '2.31763', '2.77356', '1.51976', '4.63526']
+===========_C3_C3============
+Acc     :70.32882
+auc_roc :66.57118
+F1      :81.90430
+parity  :4.38784
+equality:3.20669
+2025-09-17 14:28:11
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=28, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=28, align_epochs=11, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=6, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['69.05222', '70.98646', '70.98646', '71.56673', '69.53578']
+auc_roc : ['65.73359', '67.00403', '67.34464', '59.70707', '65.05736']
+F1      : ['80.24691', '82.83753', '83.01246', '82.98611', '80.22599']
+parity  : ['6.96528', '2.24143', '0.11862', '2.43769', '1.83588']
+equality: ['6.91489', '2.54559', '0.26596', '2.43161', '9.08055']
+===========_C3_C3============
+Acc     :70.42553
+auc_roc :64.96934
+F1      :81.86180
+parity  :2.71978
+equality:4.24772
+2025-09-19 10:58:04
+Namespace(dataset='credit', inid='_C3', runs=1, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=28, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=28, align_epochs=14, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=6, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+Traceback (most recent call last):
+  File "C:\Users\91203\PycharmProjects\fair_GDA-main\data_aug_credit.py", line 396, in <module>
+    acc, f1, auc_roc, parity, equality = run(data, args, data2) # data is training data.data2 is testing data
+  File "C:\Users\91203\PycharmProjects\fair_GDA-main\data_aug_credit.py", line 98, in run
+    data1 = update_labels_by_neighbors_with_predictions(data3, encoder, classifier)
+NameError: name 'update_labels_by_neighbors_with_predictions' is not defined
+2025-09-19 10:59:42
+Namespace(dataset='credit', inid='_C3', runs=1, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=28, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=28, align_epochs=14, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=6, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['70.79304']
+auc_roc : ['66.50161']
+F1      : ['82.17237']
+parity  : ['4.82632']
+equality: ['4.36930']
+===========_C3_C3============
+Acc     :70.79304
+auc_roc :66.50161
+F1      :82.17237
+parity  :4.82632
+equality:4.36930
+2025-09-19 11:01:04
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=28, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=28, align_epochs=18, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=6, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['69.24565', '70.79304', '70.88975', '70.79304', '53.28820']
+auc_roc : ['65.37485', '66.84222', '66.96142', '64.89464', '62.49609']
+F1      : ['80.56235', '82.78221', '82.96548', '82.89921', '57.89015']
+parity  : ['6.93671', '2.95318', 'feile!!', '0.11862', '26.63387']
+equality: ['6.00304', '1.78571', 'feile!!', '0.15198', '19.03495']
+===========_C3_C3============
+Acc     :67.00193
+auc_roc :65.31385
+F1      :77.41988
+parity  :7.32848
+equality:5.39514
+2025-09-19 11:02:54
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=28, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=29, align_epochs=15, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=6, de_separate_node_epochs=5, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['70.59961', '71.17988', '70.88975', '70.88975', '70.40619']
+auc_roc : ['66.64121', '65.82628', '66.38581', '60.20903', '68.03130']
+F1      : ['81.88319', '82.95195', '82.96548', '82.88800', '81.58845']
+parity  : ['3.57052', '2.24143', 'feile!!', '0.33538', '4.88346']
+equality: ['4.44529', '2.12766', 'feile!!', '0.45593', '6.19301']
+===========_C3_C3============
+Acc     :70.79304
+auc_roc :65.41873
+F1      :82.45541
+parity  :2.20616
+equality:2.64438
+2025-09-19 11:06:06
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=79, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=28, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=29, align_epochs=15, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=6, de_separate_node_epochs=6, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['70.88975', '70.98646', '70.98646', '70.98646', '70.98646']
+auc_roc : ['68.12965', '65.00682', '64.56763', '63.61288', '68.09657']
+F1      : ['82.13650', '82.87671', '83.01246', '82.95455', '82.35294']
+parity  : ['3.11652', '1.43156', '0.52356', '1.09618', '2.32714']
+equality: ['4.67325', '2.31763', '0.15198', '0.18997', '4.02736']
+===========_C3_C3============
+Acc     :70.96712
+auc_roc :65.88271
+F1      :82.66663
+parity  :1.69899
+equality:2.27204
+2025-09-19 11:17:23
+Namespace(dataset='credit', inid='_C3', runs=100, encoder='GCN', prop='scatter', hidden=16, seed=0, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=28, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=29, align_epochs=15, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=6, de_separate_node_epochs=6, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['70.98646', '70.40619', '70.88975', '70.88975', '71.66344', '70.69632', '71.08317', '70.50290', '70.11605', '70.50290', '69.92263', '70.98646', '71.47002', '71.47002', '70.88975', '70.69632', '71.37331', '70.88975', '72.14700', '70.88975', '44.58414', '70.21277', '71.27660', '70.69632', '62.37911', '70.88975', '71.27660', '70.98646', '70.79304', '71.08317', '71.47002', '70.69632', '70.79304', '70.88975', '71.66344', '71.08317', '70.79304', '70.98646', '70.88975', '70.69632', '69.53578', '70.88975', '70.98646', '71.47002', '70.79304', '70.88975', '70.88975', '71.17988', '71.17988', '69.72921', '71.47002', '45.55126', '65.86074', '71.66344', '71.08317', '70.88975', '70.30948', '70.59961', '70.98646', '71.37331', '70.88975', '71.47002', '70.98646', '71.27660', '71.76015', '70.88975', '70.59961', '70.88975', '70.88975', '70.40619', '71.08317', '70.88975', '70.79304', '71.27660', '69.82592', '70.98646', '70.88975', '70.88975', '70.69632', '70.88975', '70.98646', '70.98646', '70.98646', '70.98646', '70.88975', '54.44874', '70.69632', '71.08317', '70.98646', '71.56673', '71.08317', '71.37331', '70.88975', '71.17988', '70.98646', '70.98646', '70.40619', '70.98646', '70.98646', '70.88975']
+auc_roc : ['62.41677', '58.22157', '69.67521', '62.15571', '66.21108', '67.67075', '66.28474', '64.43619', '65.33270', '65.84124', '63.81389', '65.78050', '63.68472', '66.06809', '60.22830', '66.69945', '63.92312', '59.99986', '67.75732', '63.45560', '49.87468', '63.28994', '67.15655', '56.21938', '64.94291', '61.50145', '67.04731', '69.33845', '67.68956', '60.20949', '61.69612', '57.63508', '68.44534', '63.20564', '64.05456', '65.41225', '68.38959', '65.04557', '66.65027', '66.07443', '60.38535', '63.26977', '67.80491', '67.46316', '56.22436', '62.77778', '66.40575', '65.48544', '69.12769', '63.94782', '67.85816', '66.07262', '64.28005', '66.05562', '59.62889', '65.28420', '62.29485', '65.87818', '63.47260', '62.92168', '67.26170', '67.58735', '66.35114', '63.92833', '63.04542', '64.01853', '68.60646', '51.75042', '59.19513', '56.61053', '67.97669', '67.37115', '64.49126', '61.78065', '62.45870', '64.06544', '63.84108', '63.95236', '67.88060', '68.12965', '65.00682', '64.56763', '63.61288', '68.09657', '66.29539', '67.57239', '60.74953', '67.20323', '66.13313', '68.12829', '66.78534', '69.78512', '66.50796', '68.00615', '66.61266', '61.20662', '68.19062', '67.11847', '66.68472', '58.30723']
+F1      : ['82.99320', '82.43398', '82.96548', '82.71109', '82.93535', '82.79387', '82.86533', '82.17417', '82.06616', '82.54150', '81.71664', '82.87671', '83.01670', '83.21002', '82.96548', '81.37677', '83.12429', '82.96548', '83.29466', '82.96548', '47.67123', '82.03034', '83.01887', '82.73504', '71.37601', '82.80982', '83.01887', '80.05319', '82.66361', '83.04027', '83.17171', '82.83286', '82.17237', '82.96548', '82.99478', '82.66667', '82.86039', '83.01246', '82.96548', '81.69184', '80.98974', '82.96548', '82.95455', '82.67763', '82.82139', '82.79017', '82.69120', '82.93242', '80.39474', '81.40226', '82.83886', '40.67439', '76.51364', '82.99478', '82.98236', '82.96548', '82.18224', '82.30501', '83.01246', '82.98851', '82.92683', '82.36701', '82.55814', '83.05762', '83.25688', '82.96548', '82.60870', '82.96548', '82.96548', '82.43398', '82.80621', '82.77046', '82.87982', '83.09619', '81.09091', '82.81787', '82.96548', '82.96548', '80.46422', '82.13650', '82.87671', '83.01246', '82.95455', '82.35294', '82.96548', '56.82860', '82.59621', '83.02101', '82.97389', '83.10345', '83.04027', '82.90993', '82.59109', '81.93939', '82.41501', '82.99320', '81.82898', '82.53783', '83.01246', '82.96548']
+parity  : ['0.28631', '0.88751', 'feile!!', '2.69543', '3.70156', '0.57262', '3.81211', '4.91637', '4.41331', '3.40718', '3.08795', '1.43156', '1.57875', '0.09813', 'feile!!', '0.73162', '3.59536', 'feile!!', '4.53193', 'feile!!', '12.75922', '3.34569', '1.71787', '1.14525', '13.07845', '2.59731', '1.71787', '5.40640', '2.81406', '0.16769', '1.55019', '0.23725', '5.46850', 'feile!!', '1.20239', '2.08182', '0.04906', '0.11862', 'feile!!', '6.62183', '4.93252', 'feile!!', '0.45400', '0.11428', '2.14331', '3.64443', '4.38474', '3.93074', '4.89712', '6.73238', '2.65444', '9.05517', '5.28777', '1.84457', '1.38250', 'feile!!', '6.33986', '4.46237', '0.11862', '3.21899', '2.09424', '1.05085', '1.48870', '1.55019', '3.05131', 'feile!!', '2.88362', 'feile!!', 'feile!!', '0.88751', '1.81600', '1.48063', '0.92850', '1.38250', '4.74434', '2.00419', 'feile!!', 'feile!!', '3.14633', '3.11652', '1.43156', '0.52356', '1.09618', '2.32714', 'feile!!', '12.92691', '0.12670', '0.06956', '0.69125', '1.93463', '0.16769', '0.98563', '4.48287', '2.81778', '3.68107', '0.28631', '2.35571', '2.53582', '0.11862', 'feile!!']
+equality: ['0.79787', '0.37994', 'feile!!', '1.06383', '3.26748', '0.07599', '0.83587', '2.35562', '1.25380', '1.55775', '2.92553', '1.48176', '2.12766', '1.82371', 'feile!!', '9.65046', '0.94985', 'feile!!', '3.07751', 'feile!!', '8.20669', '1.13982', '1.02584', '0.26596', '8.62462', '0.49392', '1.02584', '18.95897', '1.63374', '0.22796', '0.79787', '0.30395', '3.95137', 'feile!!', '2.50760', '1.55775', '0.49392', '0.26596', 'feile!!', '7.21884', '5.01520', 'feile!!', '0.60790', '5.73708', '0.11398', '0.60790', '1.59574', '0.98784', '15.53951', '2.27964', '4.40729', '8.16869', '11.28419', '3.76140', '0.15198', 'feile!!', '1.25380', '3.00152', '0.26596', '1.74772', '0.22796', '7.02888', '4.14134', '1.21581', '1.93769', 'feile!!', '2.12766', 'feile!!', 'feile!!', '1.21581', '2.01368', '1.97568', '0.03799', '1.40578', '6.45897', '0.98784', 'feile!!', 'feile!!', '13.98176', '4.67325', '2.31763', '0.15198', '0.18997', '4.02736', 'feile!!', '20.13678', '1.48176', '0.34195', '0.49392', '1.32979', '0.22796', '3.03951', '3.00152', '8.96657', '4.10334', '0.79787', '4.93921', '4.25532', '0.26596', 'feile!!']
+===========_C3_C3============
+Acc     :70.11605
+auc_roc :64.47048
+F1      :81.42839
+parity  :2.37609
+equality:2.68351
+2025-09-19 17:22:08
+Namespace(dataset='credit', inid='_C3', runs=5, encoder='GCN', prop='scatter', hidden=16, seed=86, gpu=0, dropout=0.5, top_k=10, alpha=1, fairnet_lr=0.001, baisnet_lr=0.001, discri_F_lr=0.01, discri_B_lr=0.01, classify_lr=0.01, encoder_lr=0.01, de_feature_lr=0.001, de_edge_lr=0.001, epochs=28, df_epochs=30, db_epochs=30, class_epochs=40, ad_MLP_F_epochs=29, align_epochs=15, de_train=5, de_traintype_switch=0, de_together_epochs=5, de_separate_epochs=6, de_separate_node_epochs=6, de_separate_edge_epochs=5, strlist=None, device=device(type='cuda', index=0))
+===========_C3_C3============
+Acc     : ['70.69632', '71.08317', '70.98646', '71.56673', '71.08317']
+auc_roc : ['60.74953', '67.20323', '66.13313', '68.12829', '66.78534']
+F1      : ['82.59621', '83.02101', '82.97389', '83.10345', '83.04027']
+parity  : ['0.12670', '0.06956', '0.69125', '1.93463', '0.16769']
+equality: ['1.48176', '0.34195', '0.49392', '1.32979', '0.22796']
+===========_C3_C3============
+Acc     :71.08317
+auc_roc :65.79990
+F1      :82.94697
+parity  :0.59796
+equality:0.77508
