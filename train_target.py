@@ -187,7 +187,8 @@ def run(data, args, data2):
                 hF = F.normalize(h_F, dim=1)
                 hB = F.normalize(h_B, dim=1)
                 cos_sim = (hF * hB).sum(dim=1)
-                loss_ortho = (cos_sim ** 2).mean()
+                sigma_max = torch.linalg.svdvals(cos_sim)[0]  # 最大奇异值
+                loss_ortho = (cos_sim ** 2).mean() + 0.1 * sigma_max
 
                 # Similarity loss
                 h0 = h.clone()
