@@ -1,46 +1,113 @@
 # FairGDA: Source-Free Graph Domain Adaptation for Social Fairness
 
-This repository contains the official implementation of **FairGDA**, a novel framework designed to achieve **group fairness** and **domain adaptation** in graph neural networks (GNNs) under **source-free settings**.
+This repository contains the official implementation of **FairGDA**, a framework designed to achieve **group fairness** and **graph domain adaptation** under **source-free settings**.
 
 ## 🔍 Overview
 
-**FairGDA** explores *fair feature learning* for **Graph Domain Adaptation (GDA)** *without using source data*, aiming to balance fairness and adaptation across domains with distribution shifts.
-Most existing fairness research in GNNs assumes access to labeled source data, which is often unrealistic in real-world privacy-sensitive scenarios (e.g., social networks). FairGDA addresses this gap by learning fair features from unlabeled target data, while ensuring that sensitive attributes are disentangled from other node features.
+**FairGDA** explores fair feature learning for **Graph Domain Adaptation (GDA)** without accessing source data during target adaptation. It aims to improve both predictive performance and group fairness under graph distribution shifts.
+
+Most existing fair GNN methods assume that source training data remain available during deployment or adaptation, which may be impractical in privacy-sensitive applications such as social networks. FairGDA addresses this issue by adapting a pretrained source model to unlabeled target graphs while reducing the influence of sensitive attribute information.
 
 ## ⚙️ Framework
 
-FairGDA consists of **three synergistic components**:
+FairGDA consists of three main components:
 
-### 1. **Disentanglement of Fairness Information**
+### 1. Disentanglement of Fairness Information
 
-- Separates node representations into *fairness-related* and *bias-related* subspaces via a dual-branch learning structure (FairNet & BiasNet).
+Separates node representations into fairness-related and bias-related subspaces through a dual-branch learning structure.
 
-### 2. **Feature Reverse Alignment**
+### 2. Feature Reverse Alignment
 
-- Enhances independence between the two subspaces through **similarity minimization** and **contrastive learning**, reducing the influence of bias-related information on fairness.
+Enhances the independence between the two representation subspaces through similarity minimization and contrastive learning, reducing the influence of bias-related information.
 
-### 3. **Fairness-Aware Data Augmentation**
+### 3. Fairness-Aware Data Augmentation
 
-- Introduces iterative augmentation to increase data diversity and expose the model to varying *bias intensities*, improving robustness and fairness under domain shifts.
+Introduces iterative graph augmentation with different bias intensities to improve robustness and fairness under domain shifts.
 
-## 🔧 Installation
-Install the required dependencies:
-```angular2html
+## 🔧 Environment and Installation
+
+The implementation is based on Python and PyTorch. A CUDA-enabled GPU is recommended for efficient training, although the code can also be executed on CPU for small datasets.
+
+We recommend creating an isolated Python environment before installing the dependencies:
+
+```bash
+conda create -n fairgda python=3.9
+conda activate fairgda
+```
+
+Install all required packages using:
+
+```bash
 pip install -r requirements.txt
 ```
-## 🚀 Run the code
-To run FairGDA on a given dataset, you need to train the model on the source domain. Of course, we also provide pre-trained parameters in the `model_para` folder.
 
-```angular2html
+The detailed package dependencies are provided in `requirements.txt`.
+
+After installation, make sure that the datasets and pretrained model parameters are placed in the corresponding directories specified in the repository.
+
+## 🚀 Execution Workflow
+
+The complete experimental workflow consists of three main steps:
+
+### Step 1: Train the Source Model
+
+First, train a model on the selected source domain:
+
+```bash
 python train_source.py --dataset <dataset_name> --inid <domain>
 ```
-Replace `<dataset_name>` with the name of the dataset you want to use (e.g., `bail`, `credit`).
-Replace `<domain>` with the name of the domain you want to use (e.g., `_B0`, `_B2`).
-run `test.py` to test the model on the source domain.
 
+For example:
 
-Then, you can train the model on other target domains, for example:
-```angular2html
+```bash
+python train_source.py --dataset bail --inid _B0
+```
+
+Here,
+
+* `<dataset_name>` specifies the dataset, such as `bail` or `credit`.
+* `<domain>` specifies the source domain, such as `_B0` or `_B2`.
+
+We also provide pretrained source model parameters in the `model_para` folder. Therefore, this step can be skipped when directly using the provided pretrained models.
+
+### Step 2: Evaluate the Source Model
+
+The pretrained or newly trained source model can be evaluated by running:
+
+```bash
+python test.py --dataset <dataset_name> --inid <domain>
+```
+
+This step verifies the performance and fairness of the source model before target-domain adaptation.
+
+### Step 3: Perform Source-Free Target Adaptation
+
+After obtaining the source model, adapt it to a target domain without accessing the original source data:
+
+```bash
 python train_target.py --dataset <dataset_name> --inid <domain>
 ```
 
+For example:
+
+```bash
+python train_target.py --dataset bail --inid _B2
+```
+
+During this stage, only the pretrained source model and unlabeled target-domain graph are used, following the source-free graph domain adaptation setting.
+
+## 📌 Recommended Workflow
+
+A typical experimental pipeline is:
+
+```text
+Prepare dataset
+      ↓
+Train source model
+      ↓
+Evaluate source model
+      ↓
+Perform source-free adaptation on target domain and evaluate target-domain accuracy and fairness
+```
+
+If the provided pretrained parameters are used, the source training stage can be omitted and the experiment can start directly from target-domain adaptation.
